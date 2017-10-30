@@ -3500,6 +3500,8 @@ namespace cgfFixer
             }
 
         }
+        //TEMP for testing 
+        //TODO: read file header then fix sizes by reading each chunk. 
         public static void fixElements(string path)
         {
             //skin fix
