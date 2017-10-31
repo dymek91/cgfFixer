@@ -3467,37 +3467,38 @@ namespace cgfFixer
             }
 
         }
-        static void fixSkin(string path)
+        public static void fixSkin(string path)
         {
-            Console.Write("Loading indices");
-            loadIndices(path); Console.Write("DONE\n");
+            File.Delete(path);
+            //Console.Write("Loading indices");
+            //loadIndices(path); Console.Write("DONE\n");
 
-            Console.Write("Loading Bboxes");
-            loadBboxes(path); Console.Write("DONE\n");
+            //Console.Write("Loading Bboxes");
+            //loadBboxes(path); Console.Write("DONE\n");
 
-            //modifyTransforms(path);
-            Console.Write("Fixing verts");
-            fixSkinVerts(path); Console.Write("DONE\n");
-            if (useQTan)
-            {
-                Console.Write("Fixing Tangent Space");
-                //fixQTangents(path); Console.Write("DONE\n");
-                //fixQTangents3(path); Console.Write("DONE\n");
-            }
-            fixMesh(path);
+            ////modifyTransforms(path);
+            //Console.Write("Fixing verts");
+            //fixSkinVerts(path); Console.Write("DONE\n");
+            //if (useQTan)
+            //{
+            //    Console.Write("Fixing Tangent Space");
+            //    //fixQTangents(path); Console.Write("DONE\n");
+            //    //fixQTangents3(path); Console.Write("DONE\n");
+            //}
+            //fixMesh(path);
 
-            if (!useQTan)
-            {
-                copy(path, path + "_new");
+            //if (!useQTan)
+            //{
+            //    copy(path, path + "_new");
 
-                Console.Write("Fixing Tangent Space");
-                fixTangents7(path); Console.Write("DONE\n");
-                //fixTangents2(path); Console.Write("DONE\n");
+            //    Console.Write("Fixing Tangent Space");
+            //    fixTangents7(path); Console.Write("DONE\n");
+            //    //fixTangents2(path); Console.Write("DONE\n");
 
-                File.Delete(path);
-                copy(path + "_new", path);
-                File.Delete(path + "_new");
-            }
+            //    File.Delete(path);
+            //    copy(path + "_new", path);
+            //    File.Delete(path + "_new");
+            //}
 
         }
         //TEMP for testing 
