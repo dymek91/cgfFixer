@@ -90,7 +90,7 @@ namespace cgfFixer
                                         Fixer.fixElements(path2);
                                         Fixer.fixElements(path2 + "m");
                                         Console.Write("DONE\n");
-                                        Fixer.fixSkin(path + "m");
+                                        Fixer.fixSkin(path2 + "m");
                                         Console.Write("DONE\n");
                                         break;
                                     case ".cgf":
@@ -103,7 +103,7 @@ namespace cgfFixer
                                         Console.Write("DONE\n");
                                         break;
                                     case ".chr":
-                                        Console.WriteLine("FILE {0}", path);
+                                        Console.WriteLine("FILE {0}", path2);
                                         Console.Write("Fixing elements sizes");
                                         Fixer.fixElements(path2);
                                         Fixer.fixElements(path2 + "m");

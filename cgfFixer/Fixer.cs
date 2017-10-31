@@ -450,10 +450,38 @@ namespace cgfFixer
             }
             bw.Close();
         }
+        private static bool IsFileReady(String sFilename)
+        {
+            // If the file can be opened for exclusive access it means that the file
+            // is no longer locked by another process.
+            try
+            {
+                using (FileStream inputStream = File.Open(sFilename, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    if (inputStream.Length > 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
         static void appendFooter(string path, string tempFilePath, long position, long positionWrite)
         {
+            //temp, will do better handling later
+            while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
+           
+            while (!IsFileReady(tempFilePath)) { }
             BinaryWriter bw = new BinaryWriter(File.Open(
                     tempFilePath, FileMode.Open, FileAccess.ReadWrite));
 
@@ -3179,6 +3207,7 @@ namespace cgfFixer
                 //Console.WriteLine(Utils.tSmallPackB2F(verticlesValues[0, 0, 0]) + " " + Utils.tSmallPackB2F(verticlesValues[0, 0, 1]) + " " + Utils.tSmallPackB2F(verticlesValues[0, 0, 2]));
                 long writePos = bw.BaseStream.Position;
                 bw.Close();
+                
                 appendFooter(path, path + "_new", tangentsChunksOffsets[i, 0] + (vertsCount * 8) + 24, writePos);
             }
         }
