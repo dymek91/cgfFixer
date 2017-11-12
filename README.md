@@ -1,5 +1,5 @@
 # cgfFixer
-Convert SC cgf/cga/skin files to vanilla CryEngine format.
+Convert Star Citizen cgf/cga/skin files to vanilla CryEngine format.
 
 
 Compatible:
