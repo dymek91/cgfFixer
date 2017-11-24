@@ -1429,8 +1429,8 @@ namespace cgfFixer
         }
         public static void fixCga(string path)
         {
-            Console.Write("Loading indices");
-            loadIndices(path); Console.Write("DONE\n");
+            //Console.Write("Loading indices");
+            //loadIndices(path); Console.Write("DONE\n");
 
             Console.Write("Loading Bboxes");
             loadBboxes(path); Console.Write("DONE\n");
