@@ -129,6 +129,7 @@ namespace cgfFixer
         private static bool Replace(string path, uint seek, uint patch)
         {
             long position = 0;
+            while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             try
@@ -148,6 +149,7 @@ namespace cgfFixer
             catch (Exception exp) { br.Close(); return false; }
 
             br.Close();
+            while (!IsFileReady(path)) { }
             if (position > 0)
             {
                 BinaryWriter bw = new BinaryWriter(File.Open(
@@ -589,6 +591,7 @@ namespace cgfFixer
         //}
         private static void fixVerts(string path)
         {
+            while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -676,8 +679,9 @@ namespace cgfFixer
                 }
 
             }
-            br.Close(); 
+            br.Close();
 
+            while (!IsFileReady(path)) { }
             BinaryWriter bw = new BinaryWriter(File.Open(
                     path, FileMode.Open, FileAccess.ReadWrite));
        
@@ -1335,6 +1339,7 @@ namespace cgfFixer
         }
         private static void loadBboxes(string path)
         {
+            while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -1429,57 +1434,66 @@ namespace cgfFixer
         }
         public static void fixCga(string path)
         {
-            //Console.Write("Loading indices");
-            //loadIndices(path); Console.Write("DONE\n");
-
-            Console.Write("Loading Bboxes");
-            loadBboxes(path); Console.Write("DONE\n");
-
-            //modifyTransforms(path);
-            Console.Write("Fixing verts");
-            fixVerts(path); Console.Write("DONE\n");
-            if (useQTan)
+            if (File.Exists(path))
             {
-                Console.Write("Fixing Tangent Space");
-                //fixQTangents(path); Console.Write("DONE\n");
-                //fixQTangents3(path); Console.Write("DONE\n");
-            }
-            fixMesh(path);
+                //Console.Write("Loading indices");
+                //loadIndices(path); Console.Write("DONE\n");
 
-            if (!useQTan)
-            {
-                //copy(path, path + "_new");
-                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
+                Console.Write("Loading Bboxes");
+                loadBboxes(path); Console.Write("DONE\n");
+
+                //modifyTransforms(path);
+                Console.Write("Fixing verts");
+                fixVerts(path); Console.Write("DONE\n");
+                if (useQTan)
                 {
-                    streamTempFile = new MemoryStream();
-                    fs.CopyTo(streamTempFile); 
+                    Console.Write("Fixing Tangent Space");
+                    //fixQTangents(path); Console.Write("DONE\n");
+                    //fixQTangents3(path); Console.Write("DONE\n");
                 }
-                streamTempFile.Position = 0;
-                streamTempFile.Flush();
+                fixMesh(path);
 
-                Console.Write("Fixing Tangent Space");
-                fixTangents7(path); Console.Write("DONE\n");
-                //fixTangents2(path); Console.Write("DONE\n");
+                if (!useQTan)
+                {
+                    //copy(path, path + "_new");
+                    while (!IsFileReady(path)) { }
+                    using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
+                    {
+                        streamTempFile = new MemoryStream();
+                        fs.CopyTo(streamTempFile);
+                    }
+                    streamTempFile.Position = 0;
+                    streamTempFile.Flush();
 
-                overwriteFile(streamTempFile,path);
-                //File.Delete(path);
-                //copy(path + "_new", path);
-                //File.Delete(path + "_new");
+                    Console.Write("Fixing Tangent Space");
+                    fixTangents7(path); Console.Write("DONE\n");
+                    //fixTangents2(path); Console.Write("DONE\n");
+
+                    overwriteFile(streamTempFile, path);
+                    //File.Delete(path);
+                    //copy(path + "_new", path);
+                    //File.Delete(path + "_new");
+                }
+
+                //if (!useQTan)
+                //{
+                //    copy(path, path + "_new");
+
+                //    Console.Write("Fixing Tangent Space");
+                //    fixTangents7(path); Console.Write("DONE\n");
+                //    //fixTangents2(path); Console.Write("DONE\n");
+
+                //    File.Delete(path);
+                //    copy(path + "_new", path);
+                //    File.Delete(path + "_new");
+                //}
             }
-
-            //if (!useQTan)
-            //{
-            //    copy(path, path + "_new");
-
-            //    Console.Write("Fixing Tangent Space");
-            //    fixTangents7(path); Console.Write("DONE\n");
-            //    //fixTangents2(path); Console.Write("DONE\n");
-
-            //    File.Delete(path);
-            //    copy(path + "_new", path);
-            //    File.Delete(path + "_new");
-            //}
-
+            else
+            {
+                Console.WriteLine("File not found: {0}",path);
+                Console.WriteLine("Press any key to continue");
+                Console.Read();
+            }
         }
         public static void fixSkin(string path)
         {

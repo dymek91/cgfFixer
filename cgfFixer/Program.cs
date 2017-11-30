@@ -36,7 +36,7 @@ namespace cgfFixer
                                 Console.WriteLine("FILE {0}", path);
                                 Console.Write("Fixing elements sizes");
                                 Fixer.fixElements(path);
-                                Fixer.fixElements(path + "m");
+                                //Fixer.fixElements(path + "m");
                                 Console.Write("DONE\n");
                                 Fixer.fixSkin(path + "m");
                                 Console.Write("DONE\n");
@@ -88,7 +88,7 @@ namespace cgfFixer
                                         Console.WriteLine("FILE {0}", path2);
                                         Console.Write("Fixing elements sizes");
                                         Fixer.fixElements(path2);
-                                        Fixer.fixElements(path2 + "m");
+                                        //Fixer.fixElements(path2 + "m");
                                         Console.Write("DONE\n");
                                         Fixer.fixSkin(path2 + "m");
                                         Console.Write("DONE\n");
