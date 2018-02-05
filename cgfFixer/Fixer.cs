@@ -1531,7 +1531,7 @@ namespace cgfFixer
         }
         //TEMP for testing 
         //TODO: read file header then fix sizes by reading each chunk. - DONE
-        public static void fixElements(string path)
+        public static void fixElements(string path, bool isSKIN=false)
         {
             //load datastream chunk offset
             while (!IsFileReady(path)) { }
@@ -1577,7 +1577,7 @@ namespace cgfFixer
             {
                 ushort zeroShort = 0;
                 uint offset = dataStreamChunksOffsets[i,0]; 
-                if (dataStreamChunksOffsets[i, 1] == 8)
+                if (dataStreamChunksOffsets[i, 1] == 8 && !isSKIN)
                 {
                     ushort patch16 = 16;
                     bw.BaseStream.Position = offset + 12;

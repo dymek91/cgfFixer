@@ -35,7 +35,7 @@ namespace cgfFixer
                             case ".skin":
                                 Console.WriteLine("FILE {0}", path);
                                 Console.Write("Fixing elements sizes");
-                                Fixer.fixElements(path);
+                                Fixer.fixElements(path,true);
                                 //Fixer.fixElements(path + "m");
                                 Console.Write("DONE\n");
                                 Fixer.fixSkin(path + "m");
@@ -87,7 +87,7 @@ namespace cgfFixer
                                     case ".skin":
                                         Console.WriteLine("FILE {0}", path2);
                                         Console.Write("Fixing elements sizes");
-                                        Fixer.fixElements(path2);
+                                        Fixer.fixElements(path2, true);
                                         //Fixer.fixElements(path2 + "m");
                                         Console.Write("DONE\n");
                                         Fixer.fixSkin(path2 + "m");
