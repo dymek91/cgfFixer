@@ -4,10 +4,7 @@ Convert Star Citizen cgf/cga/skin files to vanilla CryEngine format.
 
 Compatible:
 
-.cgf/.cga files - SC 2.6.3
-
-.skin files - SC 2.6.0
-
+.cgf/.cga/.skin files - Star Citizen Alpha 3.0
 
 Usage:
 
