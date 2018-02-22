@@ -1534,7 +1534,7 @@ namespace cgfFixer
         public static void fixElements(string path, bool isSKIN=false)
         {
             //load datastream chunk offset
-            while (!IsFileReady(path)) { }
+            while (!IsFileReady(path)) { if(!File.Exists(path))return; }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             //br.ReadUInt32();
