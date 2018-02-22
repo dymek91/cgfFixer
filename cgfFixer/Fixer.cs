@@ -1537,58 +1537,67 @@ namespace cgfFixer
             while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
-            br.ReadUInt32();
-            br.ReadUInt32();
-            uint headerElements = br.ReadUInt32();
-            br.ReadUInt32();
-            uint[,] dataStreamChunksOffsets = new uint[headerElements,2];
-            int dataStreamsCount = 0;
-            for (int i = 0; i < (int)headerElements; i++)
+            //br.ReadUInt32();
+            string signature = new string(br.ReadChars(4));
+            if (signature != "CryT")
             {
-                uint chunkType = br.ReadUInt16();
-                //Console.WriteLine("{0:X}", chunkType);
-                br.ReadUInt16();
                 br.ReadUInt32();
+                uint headerElements = br.ReadUInt32();
                 br.ReadUInt32();
-                uint offset = br.ReadUInt32();
-                if (chunkType == 0x00001016) {
-                    dataStreamChunksOffsets[dataStreamsCount,0] = offset; 
-                    dataStreamsCount++;
-                }
-            }
-            for (int i = 0; i < dataStreamsCount; i++)
-            {
-                uint offset = dataStreamChunksOffsets[i,0];
-                uint elementsize = 0;
-                offset = offset + 12;
-                br.BaseStream.Position = offset;
-                elementsize = (uint)br.ReadInt16();
-                dataStreamChunksOffsets[i, 1] = elementsize;//element size
-                //Console.WriteLine(elementsize);
-            }
-            br.Close();
-
-            //write zeros on nElementSize position+2 (XX XX 00 00) -> datastream chunk offset + 14
-            while (!IsFileReady(path)) { }
-            BinaryWriter bw = new BinaryWriter(File.Open(
-                    path, FileMode.Open, FileAccess.ReadWrite));
-
-            for (int i = 0; i < dataStreamsCount; i++)
-            {
-                ushort zeroShort = 0;
-                uint offset = dataStreamChunksOffsets[i,0]; 
-                if (dataStreamChunksOffsets[i, 1] == 8 && !isSKIN)
+                uint[,] dataStreamChunksOffsets = new uint[headerElements, 2];
+                int dataStreamsCount = 0;
+                for (int i = 0; i < (int)headerElements; i++)
                 {
-                    ushort patch16 = 16;
-                    bw.BaseStream.Position = offset + 12;
-                    bw.Write(patch16);
+                    uint chunkType = br.ReadUInt16();
+                    //Console.WriteLine("{0:X}", chunkType);
+                    br.ReadUInt16();
+                    br.ReadUInt32();
+                    br.ReadUInt32();
+                    uint offset = br.ReadUInt32();
+                    if (chunkType == 0x00001016)
+                    {
+                        dataStreamChunksOffsets[dataStreamsCount, 0] = offset;
+                        dataStreamsCount++;
+                    }
+                }
+                for (int i = 0; i < dataStreamsCount; i++)
+                {
+                    uint offset = dataStreamChunksOffsets[i, 0];
+                    uint elementsize = 0;
+                    offset = offset + 12;
+                    br.BaseStream.Position = offset;
+                    elementsize = (uint)br.ReadInt16();
+                    dataStreamChunksOffsets[i, 1] = elementsize;//element size
+                                                                //Console.WriteLine(elementsize);
+                }
+                br.Close();
+
+                //write zeros on nElementSize position+2 (XX XX 00 00) -> datastream chunk offset + 14
+                while (!IsFileReady(path)) { }
+                BinaryWriter bw = new BinaryWriter(File.Open(
+                        path, FileMode.Open, FileAccess.ReadWrite));
+
+                for (int i = 0; i < dataStreamsCount; i++)
+                {
+                    ushort zeroShort = 0;
+                    uint offset = dataStreamChunksOffsets[i, 0];
+                    if (dataStreamChunksOffsets[i, 1] == 8 && !isSKIN)
+                    {
+                        ushort patch16 = 16;
+                        bw.BaseStream.Position = offset + 12;
+                        bw.Write(patch16);
+                        bw.Write(zeroShort);
+                    }
+                    bw.BaseStream.Position = offset;
+                    bw.BaseStream.Position = bw.BaseStream.Position + 14;
                     bw.Write(zeroShort);
-                } 
-                bw.BaseStream.Position = offset;
-                bw.BaseStream.Position = bw.BaseStream.Position + 14;
-                bw.Write(zeroShort); 
+                }
+                bw.Close();
             }
-            bw.Close();
+            else
+            {
+                br.Close();
+            }
         }
         public static void fixElementsOld(string path)
         {
