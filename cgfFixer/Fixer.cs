@@ -744,6 +744,7 @@ namespace cgfFixer
         }
         private static void fixSkinVerts(string path)
         {
+            while (!IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -854,6 +855,13 @@ namespace cgfFixer
 
                 uint offset = p3s_c4b_t2sChunksOffsets[i, 0];
                 int vertsCount = (int)p3s_c4b_t2sChunksOffsets[i, 1];
+
+                //ushort zeroShort = 0;
+                //ushort patch16 = 16;
+                //bw.BaseStream.Position = offset + 12;
+                //bw.Write(patch16);
+                //bw.Write(zeroShort);
+
                 bw.BaseStream.Position = offset;
                 bw.BaseStream.Position = bw.BaseStream.Position + 24;
                
@@ -1495,9 +1503,72 @@ namespace cgfFixer
                 Console.Read();
             }
         }
+        public static bool ContainsGeomStream(string path)
+        {
+            bool containsGeomStream = false;
+
+            while (!IsFileReady(path)) { }
+            BinaryReader br = new BinaryReader(File.Open(
+                    path, FileMode.Open, FileAccess.Read));
+            br.ReadUInt32();
+            br.ReadUInt32();
+            uint headerElements = br.ReadUInt32();
+            br.ReadUInt32();
+            uint[] dataStreamChunksOffsets = new uint[headerElements];
+            //int dataStreamsCount = 0;
+            for (int i = 0; i < (int)headerElements; i++)
+            {
+                uint chunkType = br.ReadUInt16();
+                //Console.WriteLine("{0:X}", chunkType);
+                br.ReadUInt16();
+                br.ReadUInt32();
+                br.ReadUInt32();
+                uint offset = br.ReadUInt32();
+                if (chunkType == 0x00001016) { containsGeomStream = true; break; }
+            }
+            br.Close();
+
+            return containsGeomStream;
+        }
         public static void fixSkin(string path)
         {
-            if(File.Exists(path)) File.Delete(path);
+            if (File.Exists(path))
+            {
+                if (ContainsGeomStream(path))
+                {
+                    if (File.Exists(path + "m")) File.Delete(path + "m");
+                }
+                else
+                {
+                    if (File.Exists(path + "m"))
+                    {
+                        fixMesh(path + "m");
+                        fixSkinVerts(path + "m");
+                        if (!useQTan)
+                        {
+                            //copy(path, path + "_new");
+                            while (!IsFileReady(path + "m")) { }
+                            using (FileStream fs = File.Open(path + "m", FileMode.Open, FileAccess.Read))
+                            {
+                                streamTempFile = new MemoryStream();
+                                fs.CopyTo(streamTempFile);
+                            }
+                            streamTempFile.Position = 0;
+                            streamTempFile.Flush();
+
+                            Console.Write("Fixing Tangent Space");
+                            fixTangents7(path + "m"); Console.Write("DONE\n");
+                            //fixTangents2(path); Console.Write("DONE\n");
+
+                            overwriteFile(streamTempFile, path + "m");
+                            //File.Delete(path);
+                            //copy(path + "_new", path);
+                            //File.Delete(path + "_new");
+                        }
+                    }
+                }
+            }
+            //if(File.Exists(path)) File.Delete(path);
             //Console.Write("Loading indices");
             //loadIndices(path); Console.Write("DONE\n");
 
@@ -1544,7 +1615,10 @@ namespace cgfFixer
                 br.ReadUInt32();
                 uint headerElements = br.ReadUInt32();
                 br.ReadUInt32();
-                uint[,] dataStreamChunksOffsets = new uint[headerElements, 2];
+                uint[,] dataStreamChunksOffsets = new uint[headerElements, 3];
+                //[x,0] - offset
+                //[x,1] - elementsize
+                //[x,2] - nStreamType
                 int dataStreamsCount = 0;
                 for (int i = 0; i < (int)headerElements; i++)
                 {
@@ -1564,11 +1638,13 @@ namespace cgfFixer
                 {
                     uint offset = dataStreamChunksOffsets[i, 0];
                     uint elementsize = 0;
-                    offset = offset + 12;
-                    br.BaseStream.Position = offset;
+                    uint nStreamType = 0;
+                    br.BaseStream.Position = offset + 4;
+                    nStreamType = (uint)br.ReadInt16();
+                    br.BaseStream.Position = offset + 12;
                     elementsize = (uint)br.ReadInt16();
-                    dataStreamChunksOffsets[i, 1] = elementsize;//element size
-                                                                //Console.WriteLine(elementsize);
+                    dataStreamChunksOffsets[i, 1] = elementsize;//element size //Console.WriteLine(elementsize);
+                    dataStreamChunksOffsets[i, 2] = nStreamType;
                 }
                 br.Close();
 
@@ -1581,7 +1657,23 @@ namespace cgfFixer
                 {
                     ushort zeroShort = 0;
                     uint offset = dataStreamChunksOffsets[i, 0];
-                    if (dataStreamChunksOffsets[i, 1] == 8 && !isSKIN)
+                    //if (dataStreamChunksOffsets[i, 1] == 8 && !isSKIN)
+                    //{
+                    //    ushort patch16 = 16;
+                    //    bw.BaseStream.Position = offset + 12;
+                    //    bw.Write(patch16);
+                    //    bw.Write(zeroShort);
+                    //}
+                    //nStreamType = 15 0xf(CGF_STREAM_P3S_C4B_T2S)
+                    if (dataStreamChunksOffsets[i, 2] == 15)
+                    {
+                        ushort patch16 = 16;
+                        bw.BaseStream.Position = offset + 12;
+                        bw.Write(patch16);
+                        bw.Write(zeroShort);
+                    }
+                    //nStreamType = 6 0x6 (CGF_STREAM_TANGENTS)
+                    if (dataStreamChunksOffsets[i, 2] == 6)
                     {
                         ushort patch16 = 16;
                         bw.BaseStream.Position = offset + 12;
