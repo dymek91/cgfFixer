@@ -16,101 +16,54 @@ namespace cgfFixer
         {
             try
             {
-                foreach (string path in args)
+                if (args.Length > 0)
                 {
-                    if (path.Length > 0 && File.Exists(path))
+                    if (args[0] == "/LY")
                     {
-                        string extension = Path.GetExtension(path);
-                        switch (extension)
+                        foreach (string path in args)
                         {
-                            case ".cga":
-                                Console.WriteLine("FILE {0}", path);
-                                Console.Write("Fixing elements sizes");
-                                Fixer.fixElements(path);
-                                Fixer.fixElements(path + "m");
-                                Console.Write("DONE\n");
-                                Fixer.fixCga(path + "m");
-                                Console.Write("DONE\n");
-                                break;
-                            case ".skin":
-                                Console.WriteLine("FILE {0}", path);
-                                Console.Write("Fixing elements sizes");
-                                Fixer.fixElements(path,true);
-                                Fixer.fixElements(path + "m");
-                                Console.Write("DONE\n");
-                                Fixer.fixSkin(path);
-                                Console.Write("DONE\n");
-                                break;
-                            case ".cgf":
-                                Console.WriteLine("FILE {0}", path);
-                                Console.Write("Fixing elements sizes");
-                                Fixer.fixElements(path);
-                                Fixer.fixElements(path + "m");
-                                Console.Write("DONE\n");
-                                Fixer.fixCga(path + "m");
-                                Console.Write("DONE\n");
-                                break;
-                            case ".chr":
-                                Console.WriteLine("FILE {0}", path);
-                                Console.Write("Fixing elements sizes");
-                                Fixer.fixElements(path);
-                                Fixer.fixElements(path + "m");
-                                Console.Write("DONE\n");
-                                break;
-                            default:
-                                break;
+                            if (path.Length > 0 && File.Exists(path))
+                            {
+                                Fixer.Fix(path,"LY");
+                            }
+                            else if (path.Length > 0 && Directory.Exists(path))
+                            {
+                                string[] filesnames = Fixer.GetFiles(path);
+                                Console.WriteLine("Found {0} files", filesnames.Count());
+                                int count = 0;
+                                foreach (string path2 in filesnames)
+                                {
+                                    count++;
+                                    if (path2.Length > 0 && File.Exists(path2))
+                                    {
+                                        Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
+                                        Fixer.Fix(path2,"LY");
+                                    }
+                                }
+                            }
                         }
                     }
-                    else if (path.Length > 0 && Directory.Exists(path))
+                    else
                     {
-                        string[] filesnames = Fixer.GetFiles(path);
-                        Console.WriteLine("Found {0} files", filesnames.Count());
-                        int count = 0;
-                        foreach (string path2 in filesnames)
+                        foreach (string path in args)
                         {
-                            count++;
-                            if (path2.Length > 0 && File.Exists(path2))
+                            if (path.Length > 0 && File.Exists(path))
                             {
-                                Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
-                                string extension = Path.GetExtension(path2);
-                                switch (extension)
+                                Fixer.Fix(path);
+                            }
+                            else if (path.Length > 0 && Directory.Exists(path))
+                            {
+                                string[] filesnames = Fixer.GetFiles(path);
+                                Console.WriteLine("Found {0} files", filesnames.Count());
+                                int count = 0;
+                                foreach (string path2 in filesnames)
                                 {
-                                    case ".cga":
-                                        Console.WriteLine("FILE {0}", path2);
-                                        Console.Write("Fixing elements sizes");
-                                        Fixer.fixElements(path2);
-                                        Fixer.fixElements(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        Fixer.fixCga(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        break;
-                                    case ".skin":
-                                        Console.WriteLine("FILE {0}", path2);
-                                        Console.Write("Fixing elements sizes");
-                                        Fixer.fixElements(path2, true);
-                                        Fixer.fixElements(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        Fixer.fixSkin(path2);
-                                        Console.Write("DONE\n");
-                                        break;
-                                    case ".cgf":
-                                        Console.WriteLine("FILE {0}", path2);
-                                        Console.Write("Fixing elements sizes");
-                                        Fixer.fixElements(path2);
-                                        Fixer.fixElements(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        Fixer.fixCga(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        break;
-                                    case ".chr":
-                                        Console.WriteLine("FILE {0}", path2);
-                                        Console.Write("Fixing elements sizes");
-                                        Fixer.fixElements(path2);
-                                        Fixer.fixElements(path2 + "m");
-                                        Console.Write("DONE\n");
-                                        break;
-                                    default:
-                                        break;
+                                    count++;
+                                    if (path2.Length > 0 && File.Exists(path2))
+                                    {
+                                        Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
+                                        Fixer.Fix(path2);
+                                    }
                                 }
                             }
                         }

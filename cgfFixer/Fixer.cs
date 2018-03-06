@@ -28,6 +28,97 @@ namespace cgfFixer
         static int meshesCount;
         static uint[,] qtangentsChunksOffsets = new uint[128, 3];//offset,chunkid
 
+        public static void Fix(string path,string version="CE54")
+        {
+            if (version == "CE54")
+            {
+                string extension = Path.GetExtension(path);
+                switch (extension)
+                {
+                    case ".cga":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixCga(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    case ".skin":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path, true);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixSkin(path);
+                        Console.Write("DONE\n");
+                        break;
+                    case ".cgf":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixCga(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    case ".chr":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if(version == "LY")
+            {
+                string extension = Path.GetExtension(path);
+                switch (extension)
+                {
+                    case ".cga":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixCga(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    case ".skin":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path, true);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixSkin(path);
+                        Console.Write("DONE\n");
+                        break;
+                    case ".cgf":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        Fixer.fixCga(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    case ".chr":
+                        Console.WriteLine("FILE {0}", path);
+                        Console.Write("Fixing elements sizes");
+                        Fixer.fixElements(path);
+                        Fixer.fixElements(path + "m");
+                        Console.Write("DONE\n");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+        }
+
         static void overwriteFile(Stream st,string path)
         {
             using (var newFileStram = File.Create(path))
@@ -1439,6 +1530,57 @@ namespace cgfFixer
                 }
             }
             bw.Close();
+        }
+        static void ModifyDataStreamsHeadersForLY()
+        {
+
+        }
+        public static void FixCgaLY(string path)
+        {
+            if (File.Exists(path))
+            {
+                //Console.Write("Loading indices");
+                //loadIndices(path); Console.Write("DONE\n");
+
+                Console.Write("Loading Bboxes");
+                loadBboxes(path); Console.Write("DONE\n");
+
+                //modifyTransforms(path);
+                Console.Write("Fixing verts");
+                fixVerts(path); Console.Write("DONE\n");
+                if (useQTan)
+                {
+                    Console.Write("Fixing Tangent Space");
+                    //fixQTangents(path); Console.Write("DONE\n");
+                    //fixQTangents3(path); Console.Write("DONE\n");
+                }
+                fixMesh(path);
+
+                if (!useQTan)
+                {
+                    //copy(path, path + "_new");
+                    while (!IsFileReady(path)) { }
+                    using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
+                    {
+                        streamTempFile = new MemoryStream();
+                        fs.CopyTo(streamTempFile);
+                    }
+                    streamTempFile.Position = 0;
+                    streamTempFile.Flush();
+
+                    Console.Write("Fixing Tangent Space");
+                    fixTangents7(path); Console.Write("DONE\n");
+                    //fixTangents2(path); Console.Write("DONE\n");
+
+                    overwriteFile(streamTempFile, path);
+                }
+            }
+            else
+            {
+                Console.WriteLine("File not found: {0}", path);
+                Console.WriteLine("Press any key to continue");
+                Console.Read();
+            }
         }
         public static void fixCga(string path)
         {
