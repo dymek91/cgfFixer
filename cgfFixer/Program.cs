@@ -14,12 +14,14 @@ namespace cgfFixer
 
         static void Main(string[] args)
         {
-            try
-            {
+            Console.Read();
+            //try
+            //{
                 if (args.Length > 0)
                 {
-                    if (args[0] == "/LY")
+                    if (args[0] == "-LY")
                     {
+                        Console.WriteLine("LUMBERYARD");
                         foreach (string path in args)
                         {
                             if (path.Length > 0 && File.Exists(path))
@@ -28,7 +30,7 @@ namespace cgfFixer
                             }
                             else if (path.Length > 0 && Directory.Exists(path))
                             {
-                                string[] filesnames = Fixer.GetFiles(path);
+                                string[] filesnames = FixerHelper.GetFiles(path);
                                 Console.WriteLine("Found {0} files", filesnames.Count());
                                 int count = 0;
                                 foreach (string path2 in filesnames)
@@ -53,7 +55,7 @@ namespace cgfFixer
                             }
                             else if (path.Length > 0 && Directory.Exists(path))
                             {
-                                string[] filesnames = Fixer.GetFiles(path);
+                                string[] filesnames = FixerHelper.GetFiles(path);
                                 Console.WriteLine("Found {0} files", filesnames.Count());
                                 int count = 0;
                                 foreach (string path2 in filesnames)
@@ -69,12 +71,12 @@ namespace cgfFixer
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(">> Error: " + e);
-                Console.Read();
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine(">> Error: " + e);
+            //    Console.Read();
+            //}
             Console.Write("ALL DONE\n");
             Console.Read();
         }

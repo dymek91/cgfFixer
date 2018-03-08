@@ -8,9 +8,9 @@ using System.IO;
 
 namespace cgfFixer
 {
-    static class Fixer
+    class Fixer_CE_5_4
     {
-        static Stream streamTempFile = new MemoryStream(); 
+        static Stream streamTempFile = new MemoryStream();
 
         static bool useQTan = false;
 
@@ -28,497 +28,11 @@ namespace cgfFixer
         static int meshesCount;
         static uint[,] qtangentsChunksOffsets = new uint[128, 3];//offset,chunkid
 
-        public static void Fix(string path,string version="CE54")
-        {
-            if (version == "CE54")
-            {
-                string extension = Path.GetExtension(path);
-                switch (extension)
-                {
-                    case ".cga":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixCga(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    case ".skin":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path, true);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixSkin(path);
-                        Console.Write("DONE\n");
-                        break;
-                    case ".cgf":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixCga(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    case ".chr":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else if(version == "LY")
-            {
-                string extension = Path.GetExtension(path);
-                switch (extension)
-                {
-                    case ".cga":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixCga(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    case ".skin":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path, true);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixSkin(path);
-                        Console.Write("DONE\n");
-                        break;
-                    case ".cgf":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer.fixCga(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    case ".chr":
-                        Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer.fixElements(path);
-                        Fixer.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            
-        }
-
-        static void overwriteFile(Stream st,string path)
-        {
-            using (var newFileStram = File.Create(path))
-            {
-                st.Seek(0, SeekOrigin.Begin);
-                st.CopyTo(newFileStram); 
-            }
-        }
-
-        static UInt16 SingleToHalf(Int32 si32)
-        {
-            // Our floating point number, F, is represented by the bit pattern in integer i.
-            // Disassemble that bit pattern into the sign, S, the exponent, E, and the significand, M.
-            // Shift S into the position where it will go in in the resulting half number.
-            // Adjust E, accounting for the different exponent bias of float and half (127 versus 15).
-
-            Int32 sign = (si32 >> 16) & 0x00008000;
-            Int32 exponent = ((si32 >> 23) & 0x000000ff) - (127 - 15);
-            Int32 mantissa = si32 & 0x007fffff;
-
-            // Now reassemble S, E and M into a half:
-
-            if (exponent <= 0)
-            {
-                if (exponent < -10)
-                {
-                    // E is less than -10. The absolute value of F is less than Half.MinValue
-                    // (F may be a small normalized float, a denormalized float or a zero).
-                    //
-                    // We convert F to a half zero with the same sign as F.
-
-                    return (UInt16)sign;
-                }
-
-                // E is between -10 and 0. F is a normalized float whose magnitude is less than Half.MinNormalizedValue.
-                //
-                // We convert F to a denormalized half.
-
-                // Add an explicit leading 1 to the significand.
-
-                mantissa = mantissa | 0x00800000;
-
-                // Round to M to the nearest (10+E)-bit value (with E between -10 and 0); in case of a tie, round to the nearest even value.
-                //
-                // Rounding may cause the significand to overflow and make our number normalized. Because of the way a half's bits
-                // are laid out, we don't have to treat this case separately; the code below will handle it correctly.
-
-                Int32 t = 14 - exponent;
-                Int32 a = (1 << (t - 1)) - 1;
-                Int32 b = (mantissa >> t) & 1;
-
-                mantissa = (mantissa + a + b) >> t;
-
-                // Assemble the half from S, E (==zero) and M.
-
-                return (UInt16)(sign | mantissa);
-            }
-            else if (exponent == 0xff - (127 - 15))
-            {
-                if (mantissa == 0)
-                {
-                    // F is an infinity; convert F to a half infinity with the same sign as F.
-
-                    return (UInt16)(sign | 0x7c00);
-                }
-                else
-                {
-                    // F is a NAN; we produce a half NAN that preserves the sign bit and the 10 leftmost bits of the
-                    // significand of F, with one exception: If the 10 leftmost bits are all zero, the NAN would turn 
-                    // into an infinity, so we have to set at least one bit in the significand.
-
-                    mantissa >>= 13;
-                    return (UInt16)(sign | 0x7c00 | mantissa | ((mantissa == 0) ? 1 : 0));
-                }
-            }
-            else
-            {
-                // E is greater than zero.  F is a normalized float. We try to convert F to a normalized half.
-
-                // Round to M to the nearest 10-bit value. In case of a tie, round to the nearest even value.
-
-                mantissa = mantissa + 0x00000fff + ((mantissa >> 13) & 1);
-
-                if ((mantissa & 0x00800000) == 1)
-                {
-                    mantissa = 0;        // overflow in significand,
-                    exponent += 1;        // adjust exponent
-                }
-
-                // exponent overflow
-                if (exponent > 30) throw new ArithmeticException("Half: Hardware floating-point overflow.");
-
-                // Assemble the half from S, E and M.
-
-                return (UInt16)(sign | (exponent << 10) | (mantissa >> 13));
-            }
-        }
-
-        private static bool Replace(string path, uint seek, uint patch)
-        {
-            long position = 0;
-            while (!IsFileReady(path)) { }
-            BinaryReader br = new BinaryReader(File.Open(
-                    path, FileMode.Open, FileAccess.Read));
-            try
-            {
-                uint buf = 0; bool found = false;
-                while (!found)
-                {
-                    buf = br.ReadUInt32();
-                    if (buf == seek)
-                    {
-                        position = br.BaseStream.Position - 4;
-                        Console.Write(".");
-                        found = true;
-                    }
-                }
-            }
-            catch (Exception exp) { br.Close(); return false; }
-
-            br.Close();
-            while (!IsFileReady(path)) { }
-            if (position > 0)
-            {
-                BinaryWriter bw = new BinaryWriter(File.Open(
-                    path, FileMode.Open, FileAccess.ReadWrite));
-
-                //
-                // write byte (character 'b') at offset 1234
-                // and close the file
-                //
-                bw.BaseStream.Seek(position, SeekOrigin.Begin);
-                bw.Write(patch);
-                bw.Close();
-                return true;
-            }
-
-            return false;
-        }
-
-        static int ReverseToInt(ushort uInt16)
-        {
-            var bytes = BitConverter.GetBytes(uInt16);
-            Array.Reverse(bytes);
-            return BitConverter.ToInt16(bytes, 0);
-        }
-        static int toInt(ushort uInt16)
-        {
-            var bytes = BitConverter.GetBytes(uInt16);
-            //Array.Reverse(bytes);
-            return BitConverter.ToInt16(bytes, 0);
-        }
-        static int byteToInt(byte uInt8)
-        {
-            var bytes = BitConverter.GetBytes(uInt8);
-            //Array.Reverse(bytes);
-            return BitConverter.ToInt16(bytes, 0);
-        }
-
-        static UInt16 fixVert(ushort uInt16)
-        {
-            //float normFloat = toInt(uInt16) / 256f / 128;
-            //var bytes = BitConverter.GetBytes(normFloat);
-            //return SingleToHalf(BitConverter.ToInt32(bytes,0));
-            float normFloat = byte2hexIntFracToFloat3(uInt16);
-            Half halfFloat;
-            halfFloat = HalfHelper.SingleToHalf(normFloat);
-            return halfFloat.value;
-        }
-
-        static ushort fixSmallVert(byte Int8)
-        {
-            //float normFloat = (sbyte)(uInt8) / 16f / 7;
-            //float normFloat = (sbyte)(uInt8) / 16f / 8;
-            // Console.WriteLine("normFloat {0}", normFloat);
-            //var bytes = BitConverter.GetBytes(normFloat);
-            //Console.WriteLine("shortnormFloat {0}", normFloat*256*128);
-            //Console.WriteLine("ushortnormFloat {0}",(ushort)( normFloat * 256 * 128));
-            //return (ushort)(normFloat * 256 * 128);
-            //return BitConverter.ToUInt16(bytes,0);
-            //var bytes = BitConverter.GetBytes(normFloat);
-            //return SingleToHalf(BitConverter.ToInt32(bytes, 0));
-            //Console.WriteLine("sbyte / 128  {0}", Int8 / 128f);
-            //Console.WriteLine("short        {0}", Int8 * 256  );
-            //string normString = byte1hexToFloat( Int8).ToString("0.0");
-            //float normFloat = Convert.ToSingle(normString);
-            // Console.WriteLine(normFloat * 256 * 128);
-            //return (ushort)(normFloat * 256 * 128);
-            return byte1hexToUshort(Int8);
-            //return (ushort)(Int8 * 256);
-        }
-        static int byte1hexToIntType2(string hexString)
-        {
-            int value = Convert.ToSByte(hexString, 16);
-            return value;
-        }
-
-        static float byte2hexIntFracToFloat2(ushort uInt16)
-        {
-            var bytes = BitConverter.GetBytes(uInt16);
-
-            int intPart = byte1hexToIntType2(Convert.ToString(bytes[1], 16));
-
-            string binary = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-            string binaryFracPart = binary;
-
-
-            //convert Fractional Part
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            float number = 0;
-            number = (float)intPart + dec;
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return number;
-        }
-        static float byte2hexIntFracToFloat3(ushort uInt16)
-        {
-            var bytes = BitConverter.GetBytes(uInt16);
-
-            string binary1 = Convert.ToString(bytes[0], 2).PadLeft(8, '0');
-            string binary2 = Convert.ToString(bytes[1], 2).PadLeft(8, '0');
-            string binary = binary2 + binary1;
-            string sign = binary.Substring(0, 1);
-            //string binaryIntPart = binary.Substring(1, 2);
-            string binaryFracPart = binary.Substring(1, 15); ;
-
-            //convert int part
-            int intPart = 0;
-            /*for (int i = 0; i < binaryIntPart.Length; i++)
-            {
-                if (binaryIntPart[i] == '0') continue;
-                intPart += (int)Math.Pow(2, i);
-            }
-            */
-            if (sign == "1") intPart = -1;
-            //convert Fractional Part
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            float number = 0;
-            number = (float)intPart + dec; //+ (float)0.000030517578125;
-            if (number != 0) number = number + (float)0.000030517578125;
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return number;
-
-
-        }
-        static float byte1hexIntFracToFloat(byte uInt8)
-        {
-
-            string binary = Convert.ToString(uInt8, 2).PadLeft(8, '0');
-            //binary = Reverse(binary);
-            string sign = binary.Substring(0, 1);
-            string binaryintPart = binary.Substring(1, 3);
-            string binaryFracPart = binary.Substring(4, 4);
-
-            //convert int part
-            int intPart = 0;
-            for (int i = 0; i < binaryintPart.Length; i++)
-            {
-                if (binaryintPart[i] == '0') continue;
-                intPart += (int)Math.Pow(2, i);
-            }
-            if (sign == "1") intPart = intPart * (-1);
-
-            //convert Fractional Part
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            float number = 0;
-            number = (float)intPart + dec;
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return number;
-        }
-        static float byte1hexToFloat(byte uInt8)
-        {
-            //return byte1hexTo8bitIEE(uInt8);
-            string binary = Convert.ToString(uInt8, 2).PadLeft(8, '0');
-            //binary = Reverse(binary);
-            //string part1 = binary.Substring(0, 4);
-            //string part2 = binary.Substring(4, 4);
-            //binary = part2 + part1;
-
-            string sign = binary.Substring(0, 1);
-            string binaryFracPart = binary.Substring(1, 7);
-            int intPart = 0;
-            //double intPart = -1 * Convert.ToInt32(sign) * Math.Pow(2,0);
-            if (sign == "1") intPart = -1;
-
-            //convert Fractional Part
-            //binaryFracPart = Reverse(binaryFracPart);
-            float dec = 0;
-            for (int i = 0; i < binaryFracPart.Length; i++)
-            {
-                if (binaryFracPart[i] == '0') continue;
-                dec += (float)Math.Pow(2, (i + 1) * (-1));
-            }
-            double number = 0;
-            number = intPart + dec + Math.Pow(2, -7);
-            /*if (intPart > 0) { number = (float)intPart + dec; }
-            if (intPart < 0) { number = (float)intPart - dec; }
-            if (intPart == 0) { number =  dec; }*/
-            return (float)number;
-        }
-        static float byte1hexTo8bitIEE(byte uInt8)
-        {
-            string binary = Convert.ToString(uInt8, 2).PadLeft(8, '0');
-            string sign = binary.Substring(0, 1);
-            string exponentBits = binary.Substring(1, 3);
-            string fractionBits = binary.Substring(4, 4);
-            int bias = 3;
-
-            //convert fractionBits Part
-            fractionBits = Reverse(fractionBits);
-            int intFraction = 0;
-            for (int i = 0; i < fractionBits.Length; i++)
-            {
-                if (fractionBits[i] == '0') continue;
-                intFraction += (int)Math.Pow(2, i);
-            }
-            float floatFraction = intFraction / 16f + 1;
-
-            //convert exponentBits part
-            exponentBits = Reverse(exponentBits);
-            int intExponent = 0;
-            for (int i = 0; i < exponentBits.Length; i++)
-            {
-                if (exponentBits[i] == '0') continue;
-                intExponent += (int)Math.Pow(2, i);
-            }
-            intExponent = intExponent - bias;
-
-
-
-            double value = floatFraction * Math.Pow(2, intExponent);
-            if (sign == "1") value = value * (-1);
-            Console.WriteLine("{0}", value);
-            return (float)value;
-        }
-        static ushort byte1hexToUshort(byte uInt8)
-        {
-            string binary = Convert.ToString(uInt8, 2).PadLeft(8, '0');
-            binary = binary.PadRight(16, '0');
-            return Convert.ToUInt16(binary, 2);
-        }
-        static void copy(string oldPath, string newPath)
-        {
-            FileStream input = null;
-            FileStream output = null;
-            try
-            {
-                input = new FileStream(oldPath, FileMode.Open);
-                output = new FileStream(newPath, FileMode.Create, FileAccess.ReadWrite);
-
-                byte[] buffer = new byte[32768];
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    output.Write(buffer, 0, read);
-                }
-                input.Close();
-                input.Dispose();
-                output.Close();
-                output.Dispose();
-            }
-            catch (Exception exp)
-            {
-            }
-            finally
-            {
-
-            }
-        }
-        static string Reverse(string s)
-        {
-            char[] charArray = s.ToCharArray();
-            Array.Reverse(charArray);
-            return new string(charArray);
-        }
         static void editTempFileHeaderOffsets(int afterElement, uint delta, BinaryReader br)
         {
             //streamTempFile.Position = 0;
             //streamTempFile.Close();
-           // BinaryWriter bw = new BinaryWriter(streamTempFile); 
+            // BinaryWriter bw = new BinaryWriter(streamTempFile); 
             br.BaseStream.Position = 0;
             br.ReadUInt32();
             br.ReadUInt32();
@@ -532,10 +46,10 @@ namespace cgfFixer
                 {
                     long position = br.BaseStream.Position;
                     uint currSize = br.ReadUInt32();
-                  //  bw.BaseStream.Position = position;
-                  //  bw.Write(currSize + delta);
+                    //  bw.BaseStream.Position = position;
+                    //  bw.Write(currSize + delta);
                     streamTempFile.Position = position;
-                    streamTempFile.Write( BitConverter.GetBytes(currSize + delta),0,sizeof(uint));
+                    streamTempFile.Write(BitConverter.GetBytes(currSize + delta), 0, sizeof(uint));
                 }
                 else
                 {
@@ -546,8 +60,8 @@ namespace cgfFixer
                 {
                     long position = br.BaseStream.Position;
                     uint currOffset = br.ReadUInt32();
-                   // bw.BaseStream.Position = position;
-                   // bw.Write(currOffset + delta);
+                    // bw.BaseStream.Position = position;
+                    // bw.Write(currOffset + delta);
                     streamTempFile.Position = position;
                     streamTempFile.Write(BitConverter.GetBytes(currOffset + delta), 0, sizeof(uint));
                 }
@@ -557,7 +71,7 @@ namespace cgfFixer
                 }
 
             }
-           // bw.Close();
+            // bw.Close();
         }
         //static void editTempFileHeaderOffsets(int afterElement, uint delta, BinaryReader br)
         //{
@@ -598,43 +112,17 @@ namespace cgfFixer
         //    }
         //    bw.Close();
         //}
-        private static bool IsFileReady(String sFilename)
-        {
-            //return true;
-            // System.Threading.Thread.Sleep(50);
-            // If the file can be opened for exclusive access it means that the file
-            // is no longer locked by another process.
-            try
-            {
-                using (FileStream inputStream = File.Open(sFilename, FileMode.Open, FileAccess.Read, FileShare.None))
-                {
-                    if (inputStream.Length > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-        static void appendFooter(string path , long position, long positionWrite)
+        static void appendFooter(string path, long position, long positionWrite)
         {
             //temp, will do better handling later
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
-           
+
             //BinaryWriter bw = new BinaryWriter(streamFile);
 
             br.BaseStream.Position = position;
-           streamTempFile.Position = positionWrite;
+            streamTempFile.Position = positionWrite;
             uint buffer;
             int licz = 0;
             try
@@ -642,7 +130,7 @@ namespace cgfFixer
                 while (true)
                 {
                     buffer = br.ReadUInt32();
-                    streamTempFile.Write(BitConverter.GetBytes( buffer),0,sizeof(uint));
+                    streamTempFile.Write(BitConverter.GetBytes(buffer), 0, sizeof(uint));
                     licz = licz + 1;
                 }
             }
@@ -682,7 +170,7 @@ namespace cgfFixer
         //}
         private static void fixVerts(string path)
         {
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -766,16 +254,16 @@ namespace cgfFixer
 
                     texcoords[i, j].X = HalfHelper.HalfToSingle(UVx);
                     texcoords[i, j].Y = HalfHelper.HalfToSingle(UVy);
-                     
+
                 }
 
             }
             br.Close();
 
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryWriter bw = new BinaryWriter(File.Open(
                     path, FileMode.Open, FileAccess.ReadWrite));
-       
+
             for (int i = 0; i < p3s_c4b_t2sCount; i++)
             {
                 Console.Write(".");
@@ -807,7 +295,7 @@ namespace cgfFixer
                     if (multiplerY < 1) { multiplerY = 1; }//bboxMax[i].Y = 0; bboxMin[i].Y = 0;  }
                     if (multiplerZ < 1) { multiplerZ = 1; }//bboxMax[i].Z = 0; bboxMin[i].Z = 0;  } 
 
-                    
+
 
                     bw.Write(HalfHelper.SingleToHalf(Utils.tPackB2F(verticlesValues[i, j, 0]) * multiplerX + (bboxMax[i].X + bboxMin[i].X) / 2).value);
                     bw.Write(HalfHelper.SingleToHalf(Utils.tPackB2F(verticlesValues[i, j, 1]) * multiplerY + (bboxMax[i].Y + bboxMin[i].Y) / 2).value);
@@ -817,7 +305,7 @@ namespace cgfFixer
                     positions[i, j].Z = Utils.tPackB2F(verticlesValues[i, j, 2]) * multiplerZ + (bboxMax[i].Z + bboxMin[i].Z) / 2;
 
 
-                    
+
                     bw.Write(HalfHelper.SingleToHalf(Utils.tPackB2F(verticlesValues[i, j, 3])).value);
                     //ushort w = 15360;
                     //bw.Write(w);
@@ -831,11 +319,11 @@ namespace cgfFixer
 
             bw.Close();
 
-             
+
         }
         private static void fixSkinVerts(string path)
         {
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -932,12 +420,12 @@ namespace cgfFixer
 
             }
             br.Close();
-          
 
-            
+
+
             BinaryWriter bw = new BinaryWriter(File.Open(
                     path, FileMode.Open, FileAccess.ReadWrite));
-           
+
             for (int i = 0; i < p3s_c4b_t2sCount; i++)
             {
                 Console.Write(".");
@@ -955,10 +443,10 @@ namespace cgfFixer
 
                 bw.BaseStream.Position = offset;
                 bw.BaseStream.Position = bw.BaseStream.Position + 24;
-               
+
                 for (int j = 0; j < vertsCount; j++)
                 {
-                    
+
                     bw.Write(HalfHelper.SingleToHalf(verticlesValues[i, j, 0]).value);
                     bw.Write(HalfHelper.SingleToHalf(verticlesValues[i, j, 1]).value);
                     bw.Write(HalfHelper.SingleToHalf(verticlesValues[i, j, 2]).value);
@@ -968,7 +456,7 @@ namespace cgfFixer
                     bw.Write(texcoordsUint16[i, j, 1]);
 
 
-                   
+
                 }
 
             }
@@ -1067,21 +555,21 @@ namespace cgfFixer
                     texcoords[i, j].X = HalfHelper.HalfToSingle(UVx);
                     texcoords[i, j].Y = HalfHelper.HalfToSingle(UVy);
 
-                    positions[i, j].X = toInt(verticlesValues[i, j, 0]) / 256f / 128;
-                    positions[i, j].Y = toInt(verticlesValues[i, j, 1]) / 256f / 128;
-                    positions[i, j].Z = toInt(verticlesValues[i, j, 2]) / 256f / 128;
+                    positions[i, j].X = FixerHelper.toInt(verticlesValues[i, j, 0]) / 256f / 128;
+                    positions[i, j].Y = FixerHelper.toInt(verticlesValues[i, j, 1]) / 256f / 128;
+                    positions[i, j].Z = FixerHelper.toInt(verticlesValues[i, j, 2]) / 256f / 128;
                 }
 
             }
             br.Close();
-            
+
             BinaryWriter bw = new BinaryWriter(File.Open(
                     path, FileMode.Open, FileAccess.ReadWrite));
             for (int i = 0; i < p3s_c4b_t2sCount; i++)
             {
                 Console.Write(".");
-                Vector3 maxCoord = new Vector3(byte2hexIntFracToFloat3(verticlesValues[i, 0, 0]), byte2hexIntFracToFloat3(verticlesValues[i, 0, 1]), byte2hexIntFracToFloat3(verticlesValues[i, 0, 2]));
-                Vector3 minCoord = new Vector3(byte2hexIntFracToFloat3(verticlesValues[i, 0, 0]), byte2hexIntFracToFloat3(verticlesValues[i, 0, 1]), byte2hexIntFracToFloat3(verticlesValues[i, 0, 2]));
+                Vector3 maxCoord = new Vector3(FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 0]), FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 1]), FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 2]));
+                Vector3 minCoord = new Vector3(FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 0]), FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 1]), FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, 0, 2]));
 
                 uint offset = p3s_c4b_t2sChunksOffsets[i, 0];
                 int vertsCount = (int)p3s_c4b_t2sChunksOffsets[i, 1];
@@ -1089,9 +577,9 @@ namespace cgfFixer
                 bw.BaseStream.Position = bw.BaseStream.Position + 24;
                 for (int j = 0; j < vertsCount; j++)
                 {
-                    float tempX = byte2hexIntFracToFloat3(verticlesValues[i, j, 0]);
-                    float tempY = byte2hexIntFracToFloat3(verticlesValues[i, j, 1]);
-                    float tempZ = byte2hexIntFracToFloat3(verticlesValues[i, j, 2]);
+                    float tempX = FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, j, 0]);
+                    float tempY = FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, j, 1]);
+                    float tempZ = FixerHelper.byte2hexIntFracToFloat3(verticlesValues[i, j, 2]);
                     if (tempX > maxCoord.X) maxCoord.X = tempX;
                     if (tempY > maxCoord.Y) maxCoord.Y = tempY;
                     if (tempZ > maxCoord.Z) maxCoord.Z = tempZ;
@@ -1113,9 +601,9 @@ namespace cgfFixer
                     Half tempX = new Half();
                     Half tempY = new Half();
                     Half tempZ = new Half();
-                    tempX.value = fixVert(verticlesValues[i, j, 0]);
-                    tempY.value = fixVert(verticlesValues[i, j, 1]);
-                    tempZ.value = fixVert(verticlesValues[i, j, 2]);
+                    tempX.value = FixerHelper.fixVert(verticlesValues[i, j, 0]);
+                    tempY.value = FixerHelper.fixVert(verticlesValues[i, j, 1]);
+                    tempZ.value = FixerHelper.fixVert(verticlesValues[i, j, 2]);
 
                     //if (HalfHelper.HalfToSingle(tempX) > 0 && Math.Abs(bboxMax[i].X) >= 1) { multiplerX = Math.Abs(bboxMax[i].X); } else if (HalfHelper.HalfToSingle(tempX) < 0 && Math.Abs(bboxMin[i].X) >= 1) { multiplerX = Math.Abs(bboxMin[i].X); }
                     //if (HalfHelper.HalfToSingle(tempY) > 0 && Math.Abs(bboxMax[i].Y) >= 1) { multiplerY = Math.Abs(bboxMax[i].Y); } else if (HalfHelper.HalfToSingle(tempY) < 0 && Math.Abs(bboxMin[i].Y) >= 1) { multiplerY = Math.Abs(bboxMin[i].Y); }
@@ -1131,7 +619,7 @@ namespace cgfFixer
                     //bw.Write(fixVert(verticlesValues[i, j, 0]));
                     //bw.Write(fixVert(verticlesValues[i, j, 1]));
                     //bw.Write(fixVert(verticlesValues[i, j, 2]));
-                    bw.Write(fixVert(verticlesValues[i, j, 3]));
+                    bw.Write(FixerHelper.fixVert(verticlesValues[i, j, 3]));
                     //ushort w = 15360;
                     //bw.Write(w);
                     bw.BaseStream.Position = bw.BaseStream.Position + 8;
@@ -1154,7 +642,7 @@ namespace cgfFixer
 
         private static void fixTangents7(string path)
         {
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -1188,7 +676,7 @@ namespace cgfFixer
                     tangentsChunksOffsets[tangentsCount, 1] = br.ReadUInt32();//verts count
                     long temppos = br.BaseStream.Position;
                     delta = delta + tangentsChunksOffsets[tangentsCount, 1] * 8;
-                    editTempFileHeaderOffsets( (int)dataStreamChunksOffsets[i, 1], delta, br);
+                    editTempFileHeaderOffsets((int)dataStreamChunksOffsets[i, 1], delta, br);
                     br.BaseStream.Position = temppos;
                     tangentsCount++;
                 }
@@ -1261,7 +749,7 @@ namespace cgfFixer
                     //bw.Write(Utils.tPackF2B(tspac.bitangent.z));
                     //bw.Write(Utils.tPackF2B(tspac.tangent.w));
 
-                    streamTempFile.Write(BitConverter.GetBytes(Utils.tPackF2B(tspac.tangent.x)), 0,sizeof(short));
+                    streamTempFile.Write(BitConverter.GetBytes(Utils.tPackF2B(tspac.tangent.x)), 0, sizeof(short));
                     streamTempFile.Write(BitConverter.GetBytes(Utils.tPackF2B(tspac.tangent.y)), 0, sizeof(short));
                     streamTempFile.Write(BitConverter.GetBytes(Utils.tPackF2B(tspac.tangent.z)), 0, sizeof(short));
                     streamTempFile.Write(BitConverter.GetBytes(Utils.tPackF2B(tspac.tangent.w)), 0, sizeof(short));
@@ -1273,9 +761,9 @@ namespace cgfFixer
 
                 }
                 long writePos = streamTempFile.Position;
-               // bw.Close();
-                
-                appendFooter(path,  tangentsChunksOffsets[i, 0] + (vertsCount * 8) + 24, writePos);
+                // bw.Close();
+
+                appendFooter(path, tangentsChunksOffsets[i, 0] + (vertsCount * 8) + 24, writePos);
             }
         }
 
@@ -1438,7 +926,7 @@ namespace cgfFixer
         }
         private static void loadBboxes(string path)
         {
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -1531,57 +1019,8 @@ namespace cgfFixer
             }
             bw.Close();
         }
-        static void ModifyDataStreamsHeadersForLY()
-        {
 
-        }
-        public static void FixCgaLY(string path)
-        {
-            if (File.Exists(path))
-            {
-                //Console.Write("Loading indices");
-                //loadIndices(path); Console.Write("DONE\n");
 
-                Console.Write("Loading Bboxes");
-                loadBboxes(path); Console.Write("DONE\n");
-
-                //modifyTransforms(path);
-                Console.Write("Fixing verts");
-                fixVerts(path); Console.Write("DONE\n");
-                if (useQTan)
-                {
-                    Console.Write("Fixing Tangent Space");
-                    //fixQTangents(path); Console.Write("DONE\n");
-                    //fixQTangents3(path); Console.Write("DONE\n");
-                }
-                fixMesh(path);
-
-                if (!useQTan)
-                {
-                    //copy(path, path + "_new");
-                    while (!IsFileReady(path)) { }
-                    using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
-                    {
-                        streamTempFile = new MemoryStream();
-                        fs.CopyTo(streamTempFile);
-                    }
-                    streamTempFile.Position = 0;
-                    streamTempFile.Flush();
-
-                    Console.Write("Fixing Tangent Space");
-                    fixTangents7(path); Console.Write("DONE\n");
-                    //fixTangents2(path); Console.Write("DONE\n");
-
-                    overwriteFile(streamTempFile, path);
-                }
-            }
-            else
-            {
-                Console.WriteLine("File not found: {0}", path);
-                Console.WriteLine("Press any key to continue");
-                Console.Read();
-            }
-        }
         public static void fixCga(string path)
         {
             if (File.Exists(path))
@@ -1606,7 +1045,7 @@ namespace cgfFixer
                 if (!useQTan)
                 {
                     //copy(path, path + "_new");
-                    while (!IsFileReady(path)) { }
+                    while (!FixerHelper.IsFileReady(path)) { }
                     using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read))
                     {
                         streamTempFile = new MemoryStream();
@@ -1619,7 +1058,7 @@ namespace cgfFixer
                     fixTangents7(path); Console.Write("DONE\n");
                     //fixTangents2(path); Console.Write("DONE\n");
 
-                    overwriteFile(streamTempFile, path);
+                    FixerHelper.overwriteFile(streamTempFile, path);
                     //File.Delete(path);
                     //copy(path + "_new", path);
                     //File.Delete(path + "_new");
@@ -1640,7 +1079,7 @@ namespace cgfFixer
             }
             else
             {
-                Console.WriteLine("File not found: {0}",path);
+                Console.WriteLine("File not found: {0}", path);
                 Console.WriteLine("Press any key to continue");
                 Console.Read();
             }
@@ -1649,7 +1088,7 @@ namespace cgfFixer
         {
             bool containsGeomStream = false;
 
-            while (!IsFileReady(path)) { }
+            while (!FixerHelper.IsFileReady(path)) { }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             br.ReadUInt32();
@@ -1689,7 +1128,7 @@ namespace cgfFixer
                         if (!useQTan)
                         {
                             //copy(path, path + "_new");
-                            while (!IsFileReady(path + "m")) { }
+                            while (!FixerHelper.IsFileReady(path + "m")) { }
                             using (FileStream fs = File.Open(path + "m", FileMode.Open, FileAccess.Read))
                             {
                                 streamTempFile = new MemoryStream();
@@ -1702,7 +1141,7 @@ namespace cgfFixer
                             fixTangents7(path + "m"); Console.Write("DONE\n");
                             //fixTangents2(path); Console.Write("DONE\n");
 
-                            overwriteFile(streamTempFile, path + "m");
+                            FixerHelper.overwriteFile(streamTempFile, path + "m");
                             //File.Delete(path);
                             //copy(path + "_new", path);
                             //File.Delete(path + "_new");
@@ -1744,10 +1183,10 @@ namespace cgfFixer
         }
         //TEMP for testing 
         //TODO: read file header then fix sizes by reading each chunk. - DONE
-        public static void fixElements(string path, bool isSKIN=false)
+        public static void fixElements(string path, bool isSKIN = false)
         {
             //load datastream chunk offset
-            while (!IsFileReady(path)) { if(!File.Exists(path))return; }
+            while (!FixerHelper.IsFileReady(path)) { if (!File.Exists(path)) return; }
             BinaryReader br = new BinaryReader(File.Open(
                     path, FileMode.Open, FileAccess.Read));
             //br.ReadUInt32();
@@ -1791,7 +1230,7 @@ namespace cgfFixer
                 br.Close();
 
                 //write zeros on nElementSize position+2 (XX XX 00 00) -> datastream chunk offset + 14
-                while (!IsFileReady(path)) { }
+                while (!FixerHelper.IsFileReady(path)) { }
                 BinaryWriter bw = new BinaryWriter(File.Open(
                         path, FileMode.Open, FileAccess.ReadWrite));
 
@@ -1840,31 +1279,31 @@ namespace cgfFixer
                 //skin fix
                 uint seek = 0x00100008;
                 uint patch = 0x00000008;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x000D000C;
                 patch = 0x0000000C;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x00210002;
                 patch = 0x00000002;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x01400010;
                 patch = 0x00000010;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x00090004;
                 patch = 0x00000004;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x0160000C;
                 patch = 0x0000000C;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x01000014;
                 patch = 0x00000014;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 // seek = 0x001d0004;
                 // patch = 0x00000004;
@@ -1873,67 +1312,24 @@ namespace cgfFixer
                 //cda fix
                 seek = 0x001d0004;
                 patch = 0x00000004;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x01420008;
                 patch = 0x0000010;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x01010010;
                 patch = 0x00000010;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 seek = 0x01b00004;
                 patch = 0x00000004;
-                while (Replace(path, seek, patch)) ;
+                while (FixerHelper.Replace(path, seek, patch)) ;
 
                 //seek = 0x00130004;
                 //patch = 0x00000004;
                 //while (Replace(path, seek, patch)) ;
             }
-        }
-        public static String[] GetFiles(String path)
-        {
-            String[] filenames = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
-            return filenames;
-        }
-
-        static bool GetBit(this byte b, int bitNumber)
-        {
-            var bit = (b & (1 << bitNumber - 1)) != 0;
-            return bit;
-        }
-
-        static float CalcAngleBetween(Vector3 invA, Vector3 invB)
-        {
-            float LengthQ = length(invA) * length(invB);
-
-            if (LengthQ < 0.0001f)
-            {
-                LengthQ = 0.0001f;                      // to prevent division by zero
-            }
-            double f = mnozenie(invA, invB) / LengthQ;
-
-            if (f > 1.0d)
-            {
-                f = 1.0d;                                                   // acos need input in the range [-1..1]
-            }
-            else if (f < -1.0d)
-            {
-                f = -1.0d;                                          //
-            }
-            float fRet = (float)Math.Acos(f);                              // cosf is not avaiable on every plattform
-
-            return (fRet);
-        }
-
-        static float length(Vector3 invA)
-        {
-            return (float)Math.Sqrt(invA.X * invA.X + invA.Y * invA.Y + invA.Z * invA.Z);
-        }
-        static float mnozenie(Vector3 vec1, Vector3 vec2)
-        {
-            return (vec1.X * vec2.X + vec1.Y * vec2.Y + vec1.Z * vec2.Z);
         }
     }
 }
