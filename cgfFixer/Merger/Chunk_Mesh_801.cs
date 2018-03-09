@@ -10,8 +10,8 @@ namespace cgfMerger
     class Chunk_Mesh_801
     {
         Chunk header;
-        static uint size = 260;
-        static uint reservedSize = 120;
+        uint size = 260;
+        uint reservedSize = 120;
 
         uint flags1;
         uint flags2;
@@ -26,12 +26,16 @@ namespace cgfMerger
         float[] bboxMax = new float[3];
         float texMappingDensity;
         uint geometricMeanFaceArea;
-        byte[] reserved = new byte[reservedSize];
+        byte[] reserved;
 
-        public byte[] serialized = new byte[size];
+        public byte[] serialized;
 
         public Chunk_Mesh_801(byte[] content)
         {
+            uint delta = (uint)content.Count()-size;
+            size = size + delta;
+            reservedSize = reservedSize + delta;
+            reserved = new byte[reservedSize];
             //Stream stream = new MemoryStream(content);
             using (MemoryStream stream = new MemoryStream(content))
             {
@@ -62,6 +66,7 @@ namespace cgfMerger
         }
         public void Serialize()
         {
+            serialized = new byte[size];
             using (MemoryStream stream = new MemoryStream(serialized))
             {
                 using (BinaryWriter bw = new BinaryWriter(stream))

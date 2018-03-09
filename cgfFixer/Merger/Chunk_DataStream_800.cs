@@ -61,5 +61,11 @@ namespace cgfMerger
                 }
             }
         }
+        public uint GetSize()
+        {
+            uint size = 0;
+            size = headerSize + nCount * nElementSize;
+            return size;
+        }
     }
 }

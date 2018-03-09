@@ -11,7 +11,7 @@ namespace cgfMerger
         List<Chunk_Node_824> primaryFileNodes;
         List<Chunk_Node_824> secondaryFileNodes;
         List<Chunk_Node_824> mergedNodes = null;
-        List<NodePair> nodePairs = null;
+        public List<NodePair> nodePairs = null;
 
         public void LoadPrimaryFileNodes(List<Chunk> chunks)
         {
@@ -21,6 +21,7 @@ namespace cgfMerger
                 if(chunk.type == 0x0000100B)
                 {
                     Chunk_Node_824 node = new Chunk_Node_824(chunk.content);
+                    node.header = new Chunk(chunk.chunkId);
                     primaryFileNodes.Add(node);
                 }
             }
@@ -33,6 +34,7 @@ namespace cgfMerger
                 if (chunk.type == 0x0000100B)
                 {
                     Chunk_Node_824 node = new Chunk_Node_824(chunk.content);
+                    node.header = new Chunk(chunk.chunkId);
                     secondaryFileNodes.Add(node);
                 }
             }

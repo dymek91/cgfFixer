@@ -50,7 +50,7 @@ namespace cgfMerger
             {
                 for (int j=0; j< mergedFile.chunks[i].size;j++ )
                 {
-                    bw.Write(mergedFile.chunks[i].content[j]);
+                   bw.Write(mergedFile.chunks[i].content[j]);
                 }
             }
             bw.Close();
@@ -74,13 +74,53 @@ namespace cgfMerger
                         DataStream_p3s_c4b_t2s p3s_c4b_t2sDataStream = new DataStream_p3s_c4b_t2s(p3s_c4b_t2sDataStreamChunk.nCount, p3s_c4b_t2sDataStreamChunk.dataStream); 
 
                         MeshRecompiler meshRecompiler = new MeshRecompiler(p3s_c4b_t2sDataStreamChunk.nCount, p3s_c4b_t2sDataStream);
-                        Chunk_DataStream_800 positionsChunk = meshRecompiler.GetPositionsChunk();
-                        Chunk_DataStream_800 texoordChunk = meshRecompiler.GetTexcoordsChunk();
-                        Chunk_DataStream_800 colorsChunk = meshRecompiler.GetColorsChunk();
-                        //<----------------------------------
+                        Chunk_DataStream_800 positionsDataStreamChunk = meshRecompiler.GetPositionsChunk();
+                        Chunk_DataStream_800 texoordDataStreamChunk = meshRecompiler.GetTexcoordsChunk();
+                        Chunk_DataStream_800 colorsDataStreamChunk = meshRecompiler.GetColorsChunk();
+
+                        positionsDataStreamChunk.Serialize();
+                        Chunk positionsChunk = new Chunk();
+                        positionsChunk.type = 0x00001016;
+                        positionsChunk.version = 0x00000800;
+                        positionsChunk.chunkId = maxChunkId;
+                        positionsChunk.size = positionsDataStreamChunk.GetSize();
+                        positionsChunk.content = positionsDataStreamChunk.serialized;
+                        maxChunkId++;
+
+                        texoordDataStreamChunk.Serialize();
+                        Chunk texcoordsChunk = new Chunk();
+                        texcoordsChunk.type = 0x00001016;
+                        texcoordsChunk.version = 0x00000800;
+                        texcoordsChunk.chunkId = maxChunkId;
+                        texcoordsChunk.size = texoordDataStreamChunk.GetSize();
+                        texcoordsChunk.content = texoordDataStreamChunk.serialized;
+                        maxChunkId++;
+
+                        colorsDataStreamChunk.Serialize();
+                        Chunk colorsChunk = new Chunk();
+                        colorsChunk.type = 0x00001016;
+                        colorsChunk.version = 0x00000800;
+                        colorsChunk.chunkId = maxChunkId;
+                        colorsChunk.size = colorsDataStreamChunk.GetSize();
+                        colorsChunk.content = colorsDataStreamChunk.serialized;
+                        maxChunkId++;
+
+                        newFile.chunks.Add(positionsChunk); newFile.chunkCount++;
+                        newFile.chunks.Add(texcoordsChunk); newFile.chunkCount++;
+                        newFile.chunks.Add(colorsChunk); newFile.chunkCount++;
+
+                        Chunk_Mesh_801 newFileMeshChunk = mergedFileMeshChunk;
+                        newFileMeshChunk.nStreamChunkID[15] = 0;
+                        newFileMeshChunk.nStreamChunkID[0] = positionsChunk.chunkId;
+                        newFileMeshChunk.nStreamChunkID[2] = texcoordsChunk.chunkId;
+                        newFileMeshChunk.nStreamChunkID[3] = colorsChunk.chunkId;
+                        newFileMeshChunk.Serialize();
+                        newFile.chunks[i].content = newFileMeshChunk.serialized;
                     }
                 }
             }
+            newFile.RecalculateChunksPositions();
+            mergedFile = newFile;
         }
         void Merge()
         {
@@ -114,6 +154,18 @@ namespace cgfMerger
                     }
                 }
                 
+            }
+            for(int i=0;i< nodePairs.nodePairs.Count;i++)
+            {
+                NodePair pair = nodePairs.nodePairs[i]; 
+                for(int j=0;j< secondaryFile.chunks.Count();j++)
+                {
+                    if(secondaryFile.chunks[j].chunkId == pair.secondaryFileNode.header.chunkId)
+                    {
+                        //change to unsupported type, not removing to prevent destorying order issues
+                        secondaryFile.chunks[j].type = 0x00006666;
+                    }
+                }
             }
         }
 

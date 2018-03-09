@@ -9,8 +9,8 @@ namespace cgfMerger
 {
     class Chunk_Node_824
     {
-        Chunk header;
-        static uint size = 204;
+        public Chunk header;
+        uint size = 204;
 
         public byte[] name = new byte[64];
         public uint objectID;
@@ -29,8 +29,9 @@ namespace cgfMerger
         public int rot_cont_id;
         public int scl_cont_id;
         uint PropStrLen;
+        byte[] propStr;
 
-        public byte[] serialized = new byte[size];
+        public byte[] serialized;
 
         public Chunk_Node_824(byte[] content)
         {
@@ -64,12 +65,17 @@ namespace cgfMerger
                     rot_cont_id = br.ReadInt32();
                     scl_cont_id = br.ReadInt32();
                     PropStrLen  = br.ReadUInt32();
+                    size = size + PropStrLen;
+                    propStr = new byte[PropStrLen];
+                    for (int i = 0; i < PropStrLen; i++)
+                        propStr[i] = br.ReadByte();
                 }
             }
             
         }
         public void Serialize()
         {
+            serialized = new byte[size];
             using (MemoryStream stream = new MemoryStream(serialized))
             {
                 using (BinaryWriter bw = new BinaryWriter(stream))
@@ -99,6 +105,7 @@ namespace cgfMerger
                     bw.Write(rot_cont_id);
                     bw.Write(scl_cont_id);
                     bw.Write(PropStrLen);
+                    bw.Write(propStr);
                 }
             }
         }

@@ -14,5 +14,14 @@ namespace cgfMerger
         public uint size;
         public uint pos;
         public byte[] content;
+
+        public Chunk()
+        {
+
+        }
+        public Chunk(uint id)
+        {
+            chunkId = id;
+        }
     }
 }
