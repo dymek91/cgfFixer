@@ -102,8 +102,8 @@ namespace cgfFixer
                         Console.Write("Fixing elements sizes");
                         Fixer_LY_1_12_0_1.fixElements(path);
                         Fixer_LY_1_12_0_1.fixElements(path + "m");
-                        merger = new Merger(path, path + "m");
-                        merger.RenderAndSaveMergedFile(path);
+                       // merger = new Merger(path, path + "m");
+                       // merger.RenderAndSaveMergedFile(path);
                         Console.Write("DONE\n");
                         break;
                     default:

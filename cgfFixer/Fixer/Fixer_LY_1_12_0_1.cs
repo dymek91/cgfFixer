@@ -1190,8 +1190,8 @@ namespace cgfFixer
                 {
                     if (File.Exists(path + "m"))
                     {
-                        fixMesh(path);
-                        fixMesh(path + "m");
+                        //fixMesh(path);
+                        //fixMesh(path + "m");
                         fixSkinVerts(path + "m");
                         if (!useQTan)
                         {
@@ -1207,10 +1207,10 @@ namespace cgfFixer
                             //copy(path + "_new", path);
                             //File.Delete(path + "_new");
                         }
-                        ModifyDataStreamsVersions(path);
-                        ModifyDataStreamsVersions(path + "m");
-                        ModifyDataStreamsHeaders(path);
-                        ModifyDataStreamsHeaders(path + "m");
+                        //ModifyDataStreamsVersions(path);
+                        //ModifyDataStreamsVersions(path + "m");
+                        //ModifyDataStreamsHeaders(path);
+                        //ModifyDataStreamsHeaders(path + "m");
                     }
                 }
             }
