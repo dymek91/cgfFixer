@@ -14,9 +14,8 @@ namespace cgfFixer
 
         static void Main(string[] args)
         {
-            Console.Read();
-            //try
-            //{
+            try
+            {
                 if (args.Length > 0)
                 {
                     if (args[0] == "-LY")
@@ -35,11 +34,21 @@ namespace cgfFixer
                                 int count = 0;
                                 foreach (string path2 in filesnames)
                                 {
-                                    count++;
-                                    if (path2.Length > 0 && File.Exists(path2))
+                                    try
                                     {
-                                        Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
-                                        Fixer.Fix(path2,"LY");
+                                        count++;
+                                        if (path2.Length > 0 && File.Exists(path2))
+                                        {
+                                            Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
+                                            Fixer.Fix(path2, "LY");
+                                        }
+                                    }
+                                    catch(Exception e)
+                                    {
+                                        Console.WriteLine(">> Error: " + e);
+                                        Console.WriteLine("");
+                                        Console.WriteLine("Press Enter to continue converting.");
+                                        Console.Read();
                                     }
                                 }
                             }
@@ -60,24 +69,34 @@ namespace cgfFixer
                                 int count = 0;
                                 foreach (string path2 in filesnames)
                                 {
-                                    count++;
-                                    if (path2.Length > 0 && File.Exists(path2))
+                                    try
                                     {
-                                        Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
-                                        Fixer.Fix(path2);
+                                        count++;
+                                        if (path2.Length > 0 && File.Exists(path2))
+                                        {
+                                            Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
+                                            Fixer.Fix(path2);
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(">> Error: " + e);
+                                        Console.WriteLine("");
+                                        Console.WriteLine("Press Enter to continue converting.");
+                                        Console.Read();
                                     }
                                 }
                             }
                         }
                     }
                 }
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(">> Error: " + e);
-            //    Console.Read();
-            //}
-            Console.Write("ALL DONE\n");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(">> Error: " + e);
+                Console.Read();
+            }
+             Console.Write("ALL DONE\n");
             Console.Read();
         }
     }
