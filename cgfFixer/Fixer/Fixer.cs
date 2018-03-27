@@ -73,6 +73,7 @@ namespace cgfFixer
                         Fixer_LY_1_12_0_1.fixCga(path);
                         merger = new Merger(path, path + "m");
                         merger.RenderAndSaveMergedFile(path);
+                        File.Delete(path + "m");
                         Console.Write("DONE\n");
                         break;
                     case ".skin":
@@ -84,6 +85,7 @@ namespace cgfFixer
                         Fixer_LY_1_12_0_1.fixSkin(path);
                         merger = new Merger(path, path + "m");
                         merger.RenderAndSaveMergedFile(path);
+                        File.Delete(path + "m");
                         Console.Write("DONE\n");
                         break;
                     case ".cgf":
@@ -95,6 +97,7 @@ namespace cgfFixer
                         Fixer_LY_1_12_0_1.fixCga(path);
                         merger = new Merger(path,path+"m");
                         merger.RenderAndSaveMergedFile(path);
+                        File.Delete(path + "m");
                         Console.Write("DONE\n");
                         break;
                     case ".chr":

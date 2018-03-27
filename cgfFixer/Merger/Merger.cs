@@ -110,6 +110,7 @@ namespace cgfMerger
                         newFile.chunks.Add(colorsChunk); newFile.chunkCount++;
 
                         Chunk_Mesh_801 newFileMeshChunk = mergedFileMeshChunk;
+                        newFileMeshChunk.nStreamChunkID[1] = 0;
                         newFileMeshChunk.nStreamChunkID[15] = 0;
                         newFileMeshChunk.nStreamChunkID[0] = positionsChunk.chunkId;
                         newFileMeshChunk.nStreamChunkID[2] = texcoordsChunk.chunkId;
