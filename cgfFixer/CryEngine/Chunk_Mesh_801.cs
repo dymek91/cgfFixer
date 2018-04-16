@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace cgfMerger
+namespace CryEngine
 {
-    class Chunk_Mesh_802
+    class Chunk_Mesh_801
     {
         Chunk header;
-        static uint size = 712;
+        uint size = 260;
+        uint reservedSize = 120;
 
         uint flags1;
         uint flags2;
@@ -19,18 +20,22 @@ namespace cgfMerger
         uint nSubSets;
         public uint nSubsetsChunkId;
         uint nVertAnimID;
-        public uint[] nStreamChunkID = new uint[128];//16x8 | 1 content 7 empty
-        uint[] nPhysicsDataChunk = new uint[4]; 
+        public uint[] nStreamChunkID = new uint[16];//16x8 | 1 content 7 empty
+        uint[] nPhysicsDataChunk = new uint[4];
         float[] bboxMin = new float[3];
         float[] bboxMax = new float[3];
         float texMappingDensity;
         uint geometricMeanFaceArea;
-        byte[] reserved = new byte[124];
+        byte[] reserved;
 
-        public byte[] serialized = new byte[size];
+        public byte[] serialized;
 
-        public Chunk_Mesh_802(byte[] content)
+        public Chunk_Mesh_801(byte[] content)
         {
+            uint delta = (uint)content.Count()-size;
+            size = size + delta;
+            reservedSize = reservedSize + delta;
+            reserved = new byte[reservedSize];
             //Stream stream = new MemoryStream(content);
             using (MemoryStream stream = new MemoryStream(content))
             {
@@ -43,7 +48,7 @@ namespace cgfMerger
                     nSubSets = br.ReadUInt32();
                     nSubsetsChunkId = br.ReadUInt32();
                     nVertAnimID = br.ReadUInt32();
-                    for (int i = 0; i < 128; i++)
+                    for (int i = 0; i < 16; i++)
                         nStreamChunkID[i] = br.ReadUInt32();
                     for (int i = 0; i < 4; i++)
                         nPhysicsDataChunk[i] = br.ReadUInt32();
@@ -53,7 +58,7 @@ namespace cgfMerger
                         bboxMax[i] = br.ReadSingle();
                     texMappingDensity = br.ReadSingle();
                     geometricMeanFaceArea = br.ReadUInt32();
-                    for (int i = 0; i < 124; i++)
+                    for (int i = 0; i < reservedSize; i++)
                         reserved[i] = br.ReadByte();
                 }
             }
@@ -61,6 +66,7 @@ namespace cgfMerger
         }
         public void Serialize()
         {
+            serialized = new byte[size];
             using (MemoryStream stream = new MemoryStream(serialized))
             {
                 using (BinaryWriter bw = new BinaryWriter(stream))
@@ -72,7 +78,7 @@ namespace cgfMerger
                     bw.Write(nSubSets);
                     bw.Write(nSubsetsChunkId);
                     bw.Write(nVertAnimID);
-                    for (int i = 0; i < 128; i++)
+                    for (int i = 0; i < 16; i++)
                         bw.Write(nStreamChunkID[i]);
                     for (int i = 0; i < 4; i++)
                         bw.Write(nPhysicsDataChunk[i]);
@@ -82,10 +88,32 @@ namespace cgfMerger
                         bw.Write(bboxMax[i]);
                     bw.Write(texMappingDensity);
                     bw.Write(geometricMeanFaceArea);
-                    for (int i = 0; i < 124; i++)
+                    for (int i = 0; i < reservedSize; i++)
                         bw.Write(reserved[i]);
                 }
             }
+        }
+        public int Get_p3s_c4b_t2s_ChunkID()
+        {
+            int p3s_c4b_t2s_chunkID=0;
+            p3s_c4b_t2s_chunkID = (int)nStreamChunkID[15];
+            return p3s_c4b_t2s_chunkID;
+        }
+        public int GetTangentsChunkID()
+        {
+            int tangetsChunkID = 0;
+            tangetsChunkID = (int)nStreamChunkID[6];
+            return tangetsChunkID;
+        }
+        public Vector3 GetBboxMin()
+        {
+            Vector3 vecBboxMin = new Vector3(bboxMin[0], bboxMin[1], bboxMin[2]);
+            return vecBboxMin;
+        }
+        public Vector3 GetBboxMax()
+        {
+            Vector3 vecBboxMax = new Vector3(bboxMax[0], bboxMax[1], bboxMax[2]);
+            return vecBboxMax;
         }
     }
 }

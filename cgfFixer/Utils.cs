@@ -40,6 +40,21 @@ namespace cgfFixer
     }
       class Utils
     {
+        [StructLayout(LayoutKind.Explicit)]
+        public struct EvilConverter
+        {
+            [FieldOffset(0)]
+            short ShortValue;
+            [FieldOffset(0)]
+            ushort UShortValue;
+
+            public static short Convert(ushort source)
+            {
+                var converter = new EvilConverter();
+                converter.UShortValue = source;
+                return converter.ShortValue;
+            }
+        }
         public static float tPackB2F( short i)
         {
         return (float)((float)i / 32767.0f);

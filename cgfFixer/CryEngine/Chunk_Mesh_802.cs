@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace cgfMerger
+namespace CryEngine
 {
-    class Chunk_Mesh_801
+    class Chunk_Mesh_802
     {
         Chunk header;
-        uint size = 260;
-        uint reservedSize = 120;
+        static uint size = 712;
 
         uint flags1;
         uint flags2;
@@ -20,22 +19,18 @@ namespace cgfMerger
         uint nSubSets;
         public uint nSubsetsChunkId;
         uint nVertAnimID;
-        public uint[] nStreamChunkID = new uint[16];//16x8 | 1 content 7 empty
-        uint[] nPhysicsDataChunk = new uint[4];
+        public uint[] nStreamChunkID = new uint[128];//16x8 | 1 content 7 empty
+        uint[] nPhysicsDataChunk = new uint[4]; 
         float[] bboxMin = new float[3];
         float[] bboxMax = new float[3];
         float texMappingDensity;
         uint geometricMeanFaceArea;
-        byte[] reserved;
+        byte[] reserved = new byte[124];
 
-        public byte[] serialized;
+        public byte[] serialized = new byte[size];
 
-        public Chunk_Mesh_801(byte[] content)
+        public Chunk_Mesh_802(byte[] content)
         {
-            uint delta = (uint)content.Count()-size;
-            size = size + delta;
-            reservedSize = reservedSize + delta;
-            reserved = new byte[reservedSize];
             //Stream stream = new MemoryStream(content);
             using (MemoryStream stream = new MemoryStream(content))
             {
@@ -48,7 +43,7 @@ namespace cgfMerger
                     nSubSets = br.ReadUInt32();
                     nSubsetsChunkId = br.ReadUInt32();
                     nVertAnimID = br.ReadUInt32();
-                    for (int i = 0; i < 16; i++)
+                    for (int i = 0; i < 128; i++)
                         nStreamChunkID[i] = br.ReadUInt32();
                     for (int i = 0; i < 4; i++)
                         nPhysicsDataChunk[i] = br.ReadUInt32();
@@ -58,7 +53,7 @@ namespace cgfMerger
                         bboxMax[i] = br.ReadSingle();
                     texMappingDensity = br.ReadSingle();
                     geometricMeanFaceArea = br.ReadUInt32();
-                    for (int i = 0; i < reservedSize; i++)
+                    for (int i = 0; i < 124; i++)
                         reserved[i] = br.ReadByte();
                 }
             }
@@ -66,7 +61,6 @@ namespace cgfMerger
         }
         public void Serialize()
         {
-            serialized = new byte[size];
             using (MemoryStream stream = new MemoryStream(serialized))
             {
                 using (BinaryWriter bw = new BinaryWriter(stream))
@@ -78,7 +72,7 @@ namespace cgfMerger
                     bw.Write(nSubSets);
                     bw.Write(nSubsetsChunkId);
                     bw.Write(nVertAnimID);
-                    for (int i = 0; i < 16; i++)
+                    for (int i = 0; i < 128; i++)
                         bw.Write(nStreamChunkID[i]);
                     for (int i = 0; i < 4; i++)
                         bw.Write(nPhysicsDataChunk[i]);
@@ -88,7 +82,7 @@ namespace cgfMerger
                         bw.Write(bboxMax[i]);
                     bw.Write(texMappingDensity);
                     bw.Write(geometricMeanFaceArea);
-                    for (int i = 0; i < reservedSize; i++)
+                    for (int i = 0; i < 124; i++)
                         bw.Write(reserved[i]);
                 }
             }

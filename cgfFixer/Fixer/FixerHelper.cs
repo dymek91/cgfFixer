@@ -9,7 +9,8 @@ using CryEngine;
 namespace cgfFixer
 {
     static class FixerHelper
-    {
+    { 
+    
         public static void overwriteFile(Stream st, string path)
         {
             using (var newFileStram = File.Create(path))

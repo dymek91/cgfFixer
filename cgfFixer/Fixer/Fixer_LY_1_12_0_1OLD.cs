@@ -8,7 +8,7 @@ using System.IO;
 
 namespace cgfFixer
 {
-    class Fixer_LY_1_12_0_1
+    class Fixer_LY_1_12_0_1OLD
     {
         static Stream streamTempFile = new MemoryStream();
 

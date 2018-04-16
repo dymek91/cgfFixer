@@ -22,36 +22,36 @@ namespace cgfFixer
                 {
                     case ".cga":
                         Console.WriteLine("FILE {0}", path);
-                        Console.Write("Fixing elements sizes");
-                        Fixer_CE_5_4.fixElements(path);
-                        Fixer_CE_5_4.fixElements(path + "m");
-                        Console.Write("DONE\n");
-                        Fixer_CE_5_4.fixCga(path + "m");
+
+                        Fixer_CE_5_4 fixerCE = new Fixer_CE_5_4(path,path+"m");
+                        fixerCE.RenderAndSaveFixedFile_Primary(path);
+                        fixerCE.RenderAndSaveFixedFile_Secondary(path + "m");
+                        
                         Console.Write("DONE\n");
                         break;
                     case ".skin":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_CE_5_4.fixElements(path, true);
-                        Fixer_CE_5_4.fixElements(path + "m");
+                        Fixer_CE_5_4OLD.fixElements(path, true);
+                        Fixer_CE_5_4OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
-                        Fixer_CE_5_4.fixSkin(path);
+                        Fixer_CE_5_4OLD.fixSkin(path);
                         Console.Write("DONE\n");
                         break;
                     case ".cgf":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_CE_5_4.fixElements(path);
-                        Fixer_CE_5_4.fixElements(path + "m");
+                        Fixer_CE_5_4OLD.fixElements(path);
+                        Fixer_CE_5_4OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
-                        Fixer_CE_5_4.fixCga(path + "m");
+                        Fixer_CE_5_4OLD.fixCga(path + "m");
                         Console.Write("DONE\n");
                         break;
                     case ".chr":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_CE_5_4.fixElements(path);
-                        Fixer_CE_5_4.fixElements(path + "m");
+                        Fixer_CE_5_4OLD.fixElements(path);
+                        Fixer_CE_5_4OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
                         break;
                     default:
@@ -67,10 +67,10 @@ namespace cgfFixer
                     case ".cga":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_LY_1_12_0_1.fixElements(path);
-                        Fixer_LY_1_12_0_1.fixElements(path + "m");
+                        Fixer_LY_1_12_0_1OLD.fixElements(path);
+                        Fixer_LY_1_12_0_1OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
-                        Fixer_LY_1_12_0_1.fixCga(path);
+                        Fixer_LY_1_12_0_1OLD.fixCga(path);
                         merger = new Merger(path, path + "m");
                         merger.RenderAndSaveMergedFile(path);
                         File.Delete(path + "m");
@@ -79,10 +79,10 @@ namespace cgfFixer
                     case ".skin":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_LY_1_12_0_1.fixElements(path, true);
-                        Fixer_LY_1_12_0_1.fixElements(path + "m");
+                        Fixer_LY_1_12_0_1OLD.fixElements(path, true);
+                        Fixer_LY_1_12_0_1OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
-                        Fixer_LY_1_12_0_1.fixSkin(path);
+                        Fixer_LY_1_12_0_1OLD.fixSkin(path);
                         merger = new Merger(path, path + "m");
                         merger.RenderAndSaveMergedFile(path);
                         File.Delete(path + "m");
@@ -91,10 +91,10 @@ namespace cgfFixer
                     case ".cgf":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_LY_1_12_0_1.fixElements(path);
-                        Fixer_LY_1_12_0_1.fixElements(path + "m");
+                        Fixer_LY_1_12_0_1OLD.fixElements(path);
+                        Fixer_LY_1_12_0_1OLD.fixElements(path + "m");
                         Console.Write("DONE\n");
-                        Fixer_LY_1_12_0_1.fixCga(path);
+                        Fixer_LY_1_12_0_1OLD.fixCga(path);
                         merger = new Merger(path,path+"m");
                         merger.RenderAndSaveMergedFile(path);
                         File.Delete(path + "m");
@@ -103,8 +103,8 @@ namespace cgfFixer
                     case ".chr":
                         Console.WriteLine("FILE {0}", path);
                         Console.Write("Fixing elements sizes");
-                        Fixer_LY_1_12_0_1.fixElements(path);
-                        Fixer_LY_1_12_0_1.fixElements(path + "m");
+                        Fixer_LY_1_12_0_1OLD.fixElements(path);
+                        Fixer_LY_1_12_0_1OLD.fixElements(path + "m");
                        // merger = new Merger(path, path + "m");
                        // merger.RenderAndSaveMergedFile(path);
                         Console.Write("DONE\n");

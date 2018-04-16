@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using CryEngine;
 
 namespace cgfMerger
 {
@@ -24,7 +25,7 @@ namespace cgfMerger
         public void LoadFrom_p3s_c4b_t2s(DataStream_p3s_c4b_t2s p3s_c4b_t2sList)
         {
             mesh = new Mesh(nCount);
-            foreach (DataStream_p3s_c4b_t2s_Elem p3s_c4b_t2s in p3s_c4b_t2sList.p3s_c4b_t2s)
+            foreach (DataStream_p3s_c4b_t2s_Elem p3s_c4b_t2s in p3s_c4b_t2sList.p3s_c4b_t2sElem)
             {
                 DataStream_Positions_Elem position = new DataStream_Positions_Elem();
                 for (int i = 0; i < 3; i++)

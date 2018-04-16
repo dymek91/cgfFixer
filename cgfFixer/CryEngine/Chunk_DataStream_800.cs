@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace cgfMerger
+namespace CryEngine
 {
     class Chunk_DataStream_800
     {
@@ -33,7 +33,8 @@ namespace cgfMerger
                     nFlags = br.ReadUInt32();
                     nStreamType = br.ReadUInt32();
                     nCount = br.ReadUInt32();
-                    nElementSize = br.ReadUInt32();
+                    nElementSize = br.ReadUInt16();
+                    br.ReadUInt16();
                     reserved[0] = br.ReadUInt32();
                     reserved[1] = br.ReadUInt32();
                     dataStream = new byte[nCount* nElementSize];

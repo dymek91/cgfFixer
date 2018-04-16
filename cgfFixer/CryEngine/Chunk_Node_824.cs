@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace cgfMerger
+namespace CryEngine
 {
     class Chunk_Node_824
     {

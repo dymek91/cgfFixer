@@ -45,10 +45,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CryEngine\DataStream_Tangents_SC.cs" />
     <Compile Include="Fixer\Fixer.cs" />
     <Compile Include="Fixer\FixerHelper.cs" />
     <Compile Include="Fixer\Fixer_CE_5_4.cs" />
-    <Compile Include="Fixer\Fixer_LY_1_12_0_1.cs" />
+    <Compile Include="Fixer\Fixer_CE_5_4OLD.cs" />
+    <Compile Include="Fixer\Fixer_LY_1_12_0_1OLD.cs" />
     <Compile Include="Half.cs" />
     <Compile Include="HalfHelper.cs" />
     <Compile Include="Math\Angles3.cs" />
@@ -59,19 +61,19 @@
     <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
-    <Compile Include="Merger\Chunk.cs" />
-    <Compile Include="Merger\Chunk_DataStream_800.cs" />
-    <Compile Include="Merger\Chunk_Mesh_801.cs" />
-    <Compile Include="Merger\Chunk_Mesh_802.cs" />
-    <Compile Include="Merger\Chunk_Node_824.cs" />
-    <Compile Include="Merger\DataStream_Colors.cs" />
-    <Compile Include="Merger\DataStream_Indices.cs" />
-    <Compile Include="Merger\DataStream_Normals.cs" />
-    <Compile Include="Merger\DataStream_p3s_c4b_t2s.cs" />
-    <Compile Include="Merger\DataStream_Positions.cs" />
-    <Compile Include="Merger\DataStream_Tangents.cs" />
-    <Compile Include="Merger\DataStream_Texcoords.cs" />
-    <Compile Include="Merger\File_ChCr_746.cs" />
+    <Compile Include="CryEngine\Chunk.cs" />
+    <Compile Include="CryEngine\Chunk_DataStream_800.cs" />
+    <Compile Include="CryEngine\Chunk_Mesh_801.cs" />
+    <Compile Include="CryEngine\Chunk_Mesh_802.cs" />
+    <Compile Include="CryEngine\Chunk_Node_824.cs" />
+    <Compile Include="CryEngine\DataStream_Colors.cs" />
+    <Compile Include="CryEngine\DataStream_Indices.cs" />
+    <Compile Include="CryEngine\DataStream_Normals.cs" />
+    <Compile Include="CryEngine\DataStream_p3s_c4b_t2s.cs" />
+    <Compile Include="CryEngine\DataStream_Positions.cs" />
+    <Compile Include="CryEngine\DataStream_Tangents.cs" />
+    <Compile Include="CryEngine\DataStream_Texcoords.cs" />
+    <Compile Include="CryEngine\File_ChCr_746.cs" />
     <Compile Include="Merger\Merger.cs" />
     <Compile Include="Merger\MergerHelper.cs" />
     <Compile Include="Merger\MeshRecompiler.cs" />
