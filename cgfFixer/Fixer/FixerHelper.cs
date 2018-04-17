@@ -428,8 +428,8 @@ namespace cgfFixer
 
                 }
             }
-            catch (Exception)
-            {
+            catch (Exception e)
+            { 
                 return false;
             }
         }

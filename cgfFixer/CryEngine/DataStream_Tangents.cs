@@ -29,10 +29,18 @@ namespace CryEngine
                 }
             }
         }
+        public uint GetElementSize()
+        {
+            return elementSize;
+        }
+        public uint GetSize()
+        {
+            return elementSize* (uint)tangent.Count;
+        }
     }
     class DataStream_Tangents_Elem
     {
-        ushort[] tangent_binormal = new ushort[8];
+        public ushort[] tangent_binormal = new ushort[8];
         public static uint size = 16;
 
         public byte[] serialized;

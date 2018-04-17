@@ -62,6 +62,10 @@ namespace CryEngine
                 }
             }
         }
+        public uint GetElementSize()
+        {
+            return nElementSize;
+        } 
         public uint GetSize()
         {
             uint size = 0;

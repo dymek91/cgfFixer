@@ -45,12 +45,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CryEngine\DataStream_p3f_c4b_t2s.cs" />
     <Compile Include="CryEngine\DataStream_Tangents_SC.cs" />
-    <Compile Include="Fixer\Fixer.cs" />
+    <Compile Include="Fixer\OLD_Fixer.cs" />
     <Compile Include="Fixer\FixerHelper.cs" />
-    <Compile Include="Fixer\Fixer_CE_5_4.cs" />
-    <Compile Include="Fixer\Fixer_CE_5_4OLD.cs" />
-    <Compile Include="Fixer\Fixer_LY_1_12_0_1OLD.cs" />
+    <Compile Include="Fixer\Fixer.cs" />
+    <Compile Include="Fixer\OLD_Fixer_CE_5_4.cs" />
+    <Compile Include="Fixer\OLD_Fixer_LY_1_12_0_1.cs" />
     <Compile Include="Half.cs" />
     <Compile Include="HalfHelper.cs" />
     <Compile Include="Math\Angles3.cs" />
