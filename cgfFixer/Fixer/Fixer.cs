@@ -69,11 +69,11 @@ namespace cgfFixer
 
                     //fix p3s_c4b_t2s
                     int p3s_c4b_t2s_ChunkID = chunkMesh.Get_p3s_c4b_t2s_ChunkID();
-                    if (p3s_c4b_t2s_ChunkID!=0)
+                    if (p3s_c4b_t2s_ChunkID != 0)
                     {
                         Console.Write(".");
                         Chunk_DataStream_800 dataStreamChunk = new Chunk_DataStream_800(chCrFile.GetChunkById((uint)p3s_c4b_t2s_ChunkID).content);
-                        if(dataStreamChunk.nElementSize==16)
+                        if (dataStreamChunk.nElementSize == 16)
                         {
                             DataStream_p3s_c4b_t2s p3s_c4b_t2sDataStream = new DataStream_p3s_c4b_t2s(dataStreamChunk.nCount, dataStreamChunk.dataStream);
                             p3s_c4b_t2sDataStream = Fix_p3s_c4b_t2s(p3s_c4b_t2sDataStream, chunkMesh.GetBboxMin(), chunkMesh.GetBboxMax());
@@ -108,37 +108,38 @@ namespace cgfFixer
                                     chCrFile.chunks[j].size = dataStreamChunk.GetSize();
                                 }
                             }
-                        }
+                        } 
 
-                    }
-                    //fix tangents
-                    int tangents_ChunkID = chunkMesh.GetTangentsChunkID();
-                    if (tangents_ChunkID != 0)
-                    {
-                        Console.Write(".");
-                        Chunk_DataStream_800 dataStreamChunk = new Chunk_DataStream_800(chCrFile.GetChunkById((uint)tangents_ChunkID).content);
-                        DataStream_Tangents_SC tangentsDataStream_SC = new DataStream_Tangents_SC(dataStreamChunk.nCount, dataStreamChunk.dataStream);
-                        DataStream_Tangents tangentsDataStream = new DataStream_Tangents();
-                        tangentsDataStream = FixTangents(tangentsDataStream_SC); 
-
-                        tangentsDataStream.Serialize();
-                        dataStreamChunk.dataStream = tangentsDataStream.serialized;
-
-                        dataStreamChunk.nElementSize = tangentsDataStream.GetElementSize();
-
-                        dataStreamChunk.Serialize();
-                        for (int j = 0; j < chCrFile.chunks.Count; j++)
+                        //fix tangents
+                        int tangents_ChunkID = chunkMesh.GetTangentsChunkID();
+                        if (tangents_ChunkID != 0)
                         {
-                            if (chCrFile.chunks[j].chunkId == (uint)tangents_ChunkID)
+                            Console.Write(".");
+                            dataStreamChunk = new Chunk_DataStream_800(chCrFile.GetChunkById((uint)tangents_ChunkID).content);
+                            DataStream_Tangents_SC tangentsDataStream_SC = new DataStream_Tangents_SC(dataStreamChunk.nCount, dataStreamChunk.dataStream);
+                            DataStream_Tangents tangentsDataStream = new DataStream_Tangents();
+                            tangentsDataStream = FixTangents(tangentsDataStream_SC);
+
+                            tangentsDataStream.Serialize();
+                            dataStreamChunk.dataStream = tangentsDataStream.serialized;
+
+                            dataStreamChunk.nElementSize = tangentsDataStream.GetElementSize();
+
+                            dataStreamChunk.Serialize();
+                            for (int j = 0; j < chCrFile.chunks.Count; j++)
                             {
-                                chCrFile.chunks[j].content = dataStreamChunk.serialized;
-                                chCrFile.chunks[j].size = dataStreamChunk.GetSize();
+                                if (chCrFile.chunks[j].chunkId == (uint)tangents_ChunkID)
+                                {
+                                    chCrFile.chunks[j].content = dataStreamChunk.serialized;
+                                    chCrFile.chunks[j].size = dataStreamChunk.GetSize();
+                                }
                             }
                         }
+
+                        //erase normals 
+                        chunkMesh.nStreamChunkID[1] = 0;
                     }
 
-                    //erase normals 
-                    chunkMesh.nStreamChunkID[1] = 0;
                     chunkMesh.Serialize();
                     chCrFile.chunks[i].content = chunkMesh.serialized;
                 }
