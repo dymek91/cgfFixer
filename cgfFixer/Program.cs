@@ -25,12 +25,16 @@ namespace cgfFixer
                         {
                             if (path.Length > 0 && File.Exists(path) && File.Exists(path + "m"))
                             {
-                                Fixer fixer = new Fixer(path, path + "m");
-                                fixer.RenderAndSaveFixedFile_Primary(path,true);
-                                fixer.RenderAndSaveFixedFile_Secondary(path + "m", true);
-                                Merger merger = new Merger(path, path + "m");
-                                merger.RenderAndSaveMergedFile(path);
-                                File.Delete(path + "m");
+                                if (!path.EndsWith("m"))
+                                { 
+                                    Fixer fixerPrimary = new Fixer(path);
+                                    Fixer fixerSecondary = new Fixer(path + "m");
+                                    fixerPrimary.RenderAndSaveFixedFile(path, true);
+                                    fixerSecondary.RenderAndSaveFixedFile(path + "m", true);
+                                    Merger merger = new Merger(path, path + "m");
+                                    merger.RenderAndSaveMergedFile(path);
+                                    File.Delete(path + "m");
+                                } 
                             }
                             else if (path.Length > 0 && Directory.Exists(path))
                             {
@@ -45,13 +49,17 @@ namespace cgfFixer
                                         count++;
                                         if (path2.Length > 0 && File.Exists(path2) && File.Exists(path2 + "m"))
                                         {
-                                            Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
-                                            Fixer fixer = new Fixer(path2, path2 + "m");
-                                            fixer.RenderAndSaveFixedFile_Primary(path2, true);
-                                            fixer.RenderAndSaveFixedFile_Secondary(path2 + "m", true);
-                                            Merger merger = new Merger(path2, path2 + "m");
-                                            merger.RenderAndSaveMergedFile(path2);
-                                            File.Delete(path2 + "m");
+                                            if (!path.EndsWith("m"))
+                                            {
+                                                Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
+                                                Fixer fixerPrimary = new Fixer(path2);
+                                                Fixer fixerSecondary = new Fixer(path2 + "m");
+                                                fixerPrimary.RenderAndSaveFixedFile(path2, true);
+                                                fixerSecondary.RenderAndSaveFixedFile(path2 + "m", true);
+                                                Merger merger = new Merger(path2, path2 + "m");
+                                                merger.RenderAndSaveMergedFile(path2);
+                                                File.Delete(path2 + "m");
+                                            }
                                         }
                                     }
                                     catch (Exception e)
@@ -69,11 +77,10 @@ namespace cgfFixer
                     {
                         foreach (string path in args)
                         {
-                            if (path.Length > 0 && File.Exists(path) && File.Exists(path + "m"))
+                            if (path.Length > 0 && File.Exists(path) && Fixer.allowedFiles.Any(x => path.EndsWith(x)))
                             {
-                                Fixer fixer = new Fixer(path, path + "m"); 
-                                fixer.RenderAndSaveFixedFile_Primary(path, true);
-                                fixer.RenderAndSaveFixedFile_Secondary(path + "m", true);
+                                Fixer fixer = new Fixer(path); 
+                                fixer.RenderAndSaveFixedFile(path, true); 
                             }
                             else if (path.Length > 0 && Directory.Exists(path))
                             {
@@ -86,12 +93,11 @@ namespace cgfFixer
                                     try
                                     {
                                         count++;
-                                        if (path2.Length > 0 && File.Exists(path2) && File.Exists(path2 + "m"))
+                                        if (path2.Length > 0 && File.Exists(path2) && Fixer.allowedFiles.Any(x => path2.EndsWith(x)))
                                         {
                                             Console.WriteLine("[{0}/{1}]", count, filesnames.Count());
-                                            Fixer fixer = new Fixer(path2, path2 + "m");
-                                            fixer.RenderAndSaveFixedFile_Primary(path2, true);
-                                            fixer.RenderAndSaveFixedFile_Secondary(path2 + "m", true);
+                                            Fixer fixer = new Fixer(path2);
+                                            fixer.RenderAndSaveFixedFile(path2, true);
                                         }
                                     }
                                     catch (Exception e)

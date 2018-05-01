@@ -10,52 +10,35 @@ namespace cgfFixer
 {
     class Fixer
     {
-        File_ChCr_746 primaryFile = null;
-        File_ChCr_746 secondaryFile = null;
+        public static string[] allowedFiles = { "cgf", "cga", "skin", "chr", "cgfm", "cgam", "skinm", "chrm" };
 
-        bool isPrimaryFileConverted = false;
-        bool isSecondaryFileConverted = false;
+        File_ChCr_746 file = null;
 
-        public Fixer(string firstFilePath, string secondFilePath)
+        bool isFileConverted = false;
+        
+        public Fixer(string filePath)
         {
-            if (File.Exists(firstFilePath) && File.Exists(secondFilePath))
+            if (File.Exists(filePath) && allowedFiles.Any(x => filePath.EndsWith(x)))
             { 
-                while (!FixerHelper.IsFileReady(firstFilePath)) { }
-                primaryFile = new File_ChCr_746(firstFilePath);  
+                while (!FixerHelper.IsFileReady(filePath)) { }
+                file = new File_ChCr_746(filePath);  
+                
 
-                while (!FixerHelper.IsFileReady(secondFilePath)) { }
-                secondaryFile = new File_ChCr_746(secondFilePath);
-
-                if (!primaryFile.HasConvertedFlag() && (!primaryFile.HasWrongSignature()))
+                if (!file.HasConvertedFlag() && (!file.HasWrongSignature()))
                 {
-                    FixPrimaryFile();
+                    FixFile();
                 }
                 else
                 {
-                    isPrimaryFileConverted = true;
-                    Console.WriteLine(primaryFile.filePath);
-                    Console.WriteLine("FILE ALREADY CONVERTED - IGNORING");
-                }
-
-                if (!secondaryFile.HasConvertedFlag() && !primaryFile.HasWrongSignature()&&!secondaryFile.HasWrongSignature())
-                {
-                    FixSecondaryFile();
-                }
-                else
-                {
-                    isSecondaryFileConverted = true;
-                    Console.WriteLine(secondaryFile.filePath);
+                    isFileConverted = true;
+                    Console.WriteLine(file.filePath);
                     Console.WriteLine("FILE ALREADY CONVERTED - IGNORING");
                 }
             }
         }
-        void FixPrimaryFile()
+        void FixFile()
         {
-            primaryFile = FixMeshes(primaryFile);   
-        }
-        void FixSecondaryFile()
-        { 
-            secondaryFile = FixMeshes(secondaryFile);
+            file = FixMeshes(file);   
         }
         File_ChCr_746 FixMeshes(File_ChCr_746 chCrFile)
         {
@@ -222,31 +205,17 @@ namespace cgfFixer
 
             return tangentsDataStream;
         }   
-        public void RenderAndSaveFixedFile_Primary(string path, bool flagAsConverted=false)
+        public void RenderAndSaveFixedFile(string path, bool flagAsConverted=false)
         {
-            if (!HasPrimaryFileConvertedFlag())
+            if (!HasFileConvertedFlag() && (file != null))
             {
-                while (!FixerHelper.IsFileReady(path)) { }
-                if (primaryFile != null)
-                    primaryFile.RenderAndSaveFile(path, flagAsConverted);
+                while (!FixerHelper.IsFileReady(path)) { } 
+                file.RenderAndSaveFile(path, flagAsConverted);
             }
         }
-        public void RenderAndSaveFixedFile_Secondary(string path, bool flagAsConverted = false)
+        public bool HasFileConvertedFlag()
         {
-            if (!HasSecondaryFileConvertedFlag())
-            {
-                while (!FixerHelper.IsFileReady(path)) { }
-                if (secondaryFile != null)
-                    secondaryFile.RenderAndSaveFile(path, flagAsConverted);
-            }
-        }
-        public bool HasPrimaryFileConvertedFlag()
-        {
-            return isPrimaryFileConverted;
-        }
-        public bool HasSecondaryFileConvertedFlag()
-        {
-            return isSecondaryFileConverted;
+            return isFileConverted;
         }
     }
 }
